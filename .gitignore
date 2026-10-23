@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.venv/
+__pycache__/
+.pytest_cache/
+.env
+backend/.env
+test-results/
+.requirements-review/
+artifacts/
