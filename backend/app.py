@@ -79,6 +79,9 @@ class Snapshot(BaseModel):
     title: str = Field(max_length=1000)
     width: int = Field(gt=0, le=12000)
     height: int = Field(gt=0, le=12000)
+    fullPage: bool = False
+    viewportWidth: int | None = Field(default=None, gt=0, le=12000)
+    viewportHeight: int | None = Field(default=None, gt=0, le=12000)
     dpr: float = Field(gt=0, le=10)
     scrollX: float
     scrollY: float
@@ -144,7 +147,7 @@ async def compare(payload: CompareRequest):
     async with gate:
         design, actual = await asyncio.to_thread(lambda: (decode_image(payload.design), decode_image(payload.actual)))
         if abs((actual.width / actual.height) / (payload.snapshot.width / payload.snapshot.height) - 1) > .03:
-            raise HTTPException(422, 'Capture dimensions do not match the inspected viewport. Recapture.')
+            raise HTTPException(422, 'Capture dimensions do not match the recorded page dimensions. Recapture.')
         try:
             result = await asyncio.to_thread(analyze, design, actual, payload.snapshot.model_dump())
             validated = Analysis.model_validate(result)

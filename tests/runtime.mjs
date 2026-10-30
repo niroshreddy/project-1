@@ -59,7 +59,32 @@ try {
   assert.equal(comparison.body.model,'local-rules-v3');
   assert(comparison.body.issues.length>0,'Real local comparison must detect changed button position');
   assert(comparison.body.issues.some(issue=>issue.basis==='measured'));
-  console.log('PASS: real extension capture, DOM extraction, live highlight, inactive-tab rejection, Python origin boundary, and actual local OCR/rules comparison. No external analysis service.');
+  await page.evaluate(()=>{
+    const bottom=document.createElement('div');bottom.textContent='BOTTOM OF FULL PAGE';bottom.style.cssText='height:100px;background:rgb(12,120,45);color:white';document.body.append(bottom);
+    const fixed=document.createElement('div');fixed.id='fixed-fixture';fixed.textContent='FIXED HEADER';fixed.style.cssText='position:fixed;top:0;left:0;background:red;color:white';document.body.append(fixed);scrollTo(0,350);
+  });
+  const originalScroll=await page.evaluate(()=>scrollY);
+  const full=await worker.evaluate(id=>captureFullPage(id),tabId);
+  assert.equal(full.snapshot.fullPage,true);assert(full.snapshot.height>1800);
+  assert(full.snapshot.elements.some(element=>element.text==='BOTTOM OF FULL PAGE'));
+  assert.equal(await page.evaluate(()=>scrollY),originalScroll);
+  assert.equal(await page.locator('#fixed-fixture').evaluate(element=>element.style.visibility),'');
+  const pixels=await page.evaluate(async data=>{
+    const image=new Image();image.src=data;await image.decode();const c=document.createElement('canvas');c.width=image.width;c.height=image.height;
+    const x=c.getContext('2d');x.drawImage(image,0,0);return {width:c.width,height:c.height,bottom:[...x.getImageData(500,c.height-30,1,1).data]};
+  },full.image);
+  assert.equal(pixels.height,full.snapshot.height);assert.deepEqual(pixels.bottom,[12,120,45,255]);
+  await worker.evaluate(async({tabId,snapshot})=>{
+    await chrome.scripting.executeScript({target:{tabId},func:showHighlight,args:[{x:.1,y:.9,width:.2,height:.04},snapshot,'Bottom issue']});
+  },{tabId,snapshot:full.snapshot});
+  assert(await page.evaluate(()=>scrollY)>1000);assert.equal(await page.locator('#__project1_overlay').count(),1);
+  await page.evaluate(()=>document.getElementById('__project1_overlay')?.remove());
+  const fullComparison=await worker.evaluate(async payload=>{
+    const response=await fetch('http://127.0.0.1:8765/compare',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    return {status:response.status,body:await response.json()};
+  },{design:full.image,actual:full.image,snapshot:full.snapshot});
+  assert.equal(fullComparison.status,200,JSON.stringify(fullComparison.body));assert.deepEqual(fullComparison.body.issues,[]);
+  console.log('PASS: viewport and full-page capture, bottom pixels, below-fold DOM/highlights, fixed-element restoration, original scroll restoration, Python validation, and local comparison.');
 } finally {
   backend?.kill();await context?.close();await new Promise(resolve=>server.close(resolve));
 }

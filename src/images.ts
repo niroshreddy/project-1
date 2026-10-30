@@ -1,7 +1,7 @@
 import type { Capture, Comparison, Design, Issue } from './types';
 export function exportCapture(capture: Capture) {
   const link = document.createElement('a');
-  link.href = capture.image; link.download = 'project-1-viewport.png'; link.click();
+  link.href = capture.image; link.download = capture.snapshot.fullPage ? 'project-1-full-page.png' : 'project-1-viewport.png'; link.click();
 }
 export function imageFrom(source: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => { const image = new Image(); image.onload = () => resolve(image); image.onerror = () => reject(new Error('Unable to decode image.')); image.src = source; });
@@ -61,13 +61,19 @@ export async function exportPdf(record: Comparison) {
   line('project-1 / UI validation report', 20);
   line(`Captured: ${new Date(record.capture.capturedAt).toLocaleString()}`);
   line(`URL: ${record.capture.snapshot.url}`);
-  line(`Viewport: ${record.capture.snapshot.width} x ${record.capture.snapshot.height} CSS px | Engine: ${record.model}`);
+  line(`${record.capture.snapshot.fullPage ? 'Full page' : 'Viewport'}: ${record.capture.snapshot.width} x ${record.capture.snapshot.height} CSS px | Engine: ${record.model}`);
   line(`${visibleIssues(record).length} active findings; ${record.issues.filter(i => i.dismissed).length} dismissed. Pixel change: ${record.diff.changedPercent}% (not an accuracy score).`);
   line(record.summary);
-  for (const [label, source] of [['Expected design', record.design.image], ['Annotated viewport', (await annotated(record)).toDataURL('image/png')]]) {
-    pdf.addPage(); y=20; line(label,16);
-    const image = await imageFrom(source); const width = Math.min(176, 236*image.width/image.height); const height = width*image.height/image.width;
-    pdf.addImage(source,'PNG',17,y,width,height);
+  for (const [label, source] of [['Expected design', record.design.image], ['Annotated page', (await annotated(record)).toDataURL('image/png')]]) {
+    const image = await imageFrom(source);
+    const sliceHeight = Math.max(1, Math.floor(image.width*236/176));
+    const parts = Math.ceil(image.height/sliceHeight);
+    for (let part=0;part<parts;part++) {
+      pdf.addPage(); y=20; line(`${label}${parts>1 ? ` (${part+1}/${parts})` : ''}`,16);
+      const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=Math.min(sliceHeight,image.height-part*sliceHeight);
+      canvas.getContext('2d')!.drawImage(image,0,part*sliceHeight,image.width,canvas.height,0,0,image.width,canvas.height);
+      pdf.addImage(canvas.toDataURL('image/png'),'PNG',17,y,176,canvas.height*176/image.width);
+    }
   }
   pdf.addPage(); y=20; line('Findings',18);
   if (!visibleIssues(record).length) line('No active findings. This does not guarantee pixel-perfect compliance.');
@@ -75,7 +81,7 @@ export async function exportPdf(record: Comparison) {
     if (issue.dismissed) return;
     if (y>215) { pdf.addPage(); y=20; }
     line(`${index+1}. ${issue.title} [${issue.severity}; confidence ${Math.round(issue.confidence*100)}%]`,12);
-    line(`Evidence: ${issue.basis ?? 'legacy'}. Confidence is heuristic. Category: ${issue.category}. Location: ${Math.round(issue.box.x*100)}%, ${Math.round(issue.box.y*100)}% of viewport.`);
+    line(`Evidence: ${issue.basis ?? 'legacy'}. Confidence is heuristic. Category: ${issue.category}. Location: ${Math.round(issue.box.x*100)}%, ${Math.round(issue.box.y*100)}% of captured page.`);
     line(`Expected: ${issue.expected}`); line(`Actual: ${issue.actual}`);
     line(issue.explanation); line(`Recommendation: ${issue.recommendation}`);
   });

@@ -7,7 +7,7 @@ export type Issue = {
   basis?: 'measured' | 'possible';
 };
 export type ElementInfo = { tag: string; text: string; box: Box; fontSize: string; fontFamily: string; color: string; background: string; display: string; gap: string; padding: string };
-export type Snapshot = { url: string; title: string; width: number; height: number; dpr: number; scrollX: number; scrollY: number; elements: ElementInfo[] };
+export type Snapshot = { url: string; title: string; width: number; height: number; viewportWidth?: number; viewportHeight?: number; fullPage?: boolean; dpr: number; scrollX: number; scrollY: number; elements: ElementInfo[] };
 export type Capture = { image: string; snapshot: Snapshot; capturedAt: string };
 export type Design = { image: string; name: string; width: number; height: number };
 export type Diff = { changedPercent: number; regions: Box[] };

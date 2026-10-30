@@ -7,12 +7,12 @@ export async function message<T>(payload: object): Promise<T> {
   if (!response || !('data' in response)) throw new Error('No response from the extension. Reload the extension and reopen Developer Tools.');
   return response.data;
 }
-export async function captureViewport(): Promise<Capture> {
+export async function capturePage(): Promise<Capture> {
   if (!globalThis.chrome?.permissions) throw new Error('Install the extension and open its project-1 DevTools tab to capture a page.');
   // captureVisibleTab requires activeTab or <all_urls>. A DevTools click does not grant activeTab.
   const granted = await chrome.permissions.request({ origins: ['<all_urls>'] });
   if (!granted) throw new Error('Website access is needed for viewport capture. Click Capture again to grant access.');
-  return message<Capture>({ type: 'capture' });
+  return message<Capture>({ type: 'captureFullPage' });
 }
 export async function compare(design: Design, capture: Capture, signal: AbortSignal): Promise<Comparison> {
   const response = await fetch(`${API}/compare`, { method:'POST', headers:{'Content-Type':'application/json'},

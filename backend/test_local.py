@@ -200,6 +200,21 @@ def test_health_has_no_api_key_requirement(client):
     assert response.json()['externalServices'] is False
 
 
+def test_full_page_capture_schema_accepts_document_dimensions(client):
+    request=payload();request['actual']=request['design']=data(Image.new('RGB',(1000,2400),'white'))
+    request['snapshot'].update(width=1000,height=2400,fullPage=True,viewportWidth=1000,viewportHeight=600)
+    response=client.post('/compare',json=request)
+    assert response.status_code==200,response.text
+    assert response.json()['issues']==[]
+
+
+def test_ocr_reads_below_first_screen_on_long_pages():
+    image=Image.new('RGB',(1000,3500),'white')
+    ImageDraw.Draw(image).text((100,3100),'BOTTOM SECTION',font=ImageFont.load_default(size=40),fill='black')
+    runs=engine.read_text(image)
+    assert any('bottomsection' in engine.normalize(run.text).replace(' ','') and run.box['y']>.8 for run in runs),runs
+
+
 def test_same_page_at_different_dpi_has_no_ocr_findings(monkeypatch):
     design=Image.new('RGB',(1000,600),'white')
     draw=ImageDraw.Draw(design)

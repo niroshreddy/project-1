@@ -46,26 +46,31 @@ class TextRun:
 
 
 def read_text(image):
-    # Bound OCR work even for a large screenshot; coordinates stay normalized.
+    # Read overlapping vertical strips so long-page text is not shrunk away.
     image = image.copy()
-    image.thumbnail((1600, 1600))
-    rgb = np.asarray(image.convert('RGB'))
-    results, _ = ocr_engine()(cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR), use_cls=False)
+    if image.width > 1600:
+        image = image.resize((1600, max(1,round(image.height*1600/image.width))))
     runs = []
-    for points, text, confidence in (results or [])[:350]:
-        if confidence < .80 or len(normalize(text)) < 2:
-            continue
-        points = np.asarray(points)
-        x, y = points.min(axis=0)
-        right, bottom = points.max(axis=0)
-        runs.append(TextRun(text[:140], clipped(float(x/image.width), float(y/image.height),
-                    float((right-x)/image.width), float((bottom-y)/image.height)), float(confidence)))
+    for top in range(0, image.height, 1472):
+        strip = image.crop((0,top,image.width,min(image.height,top+1600)))
+        results, _ = ocr_engine()(cv2.cvtColor(np.asarray(strip.convert('RGB')), cv2.COLOR_RGB2BGR), use_cls=False)
+        for points, text, confidence in (results or []):
+            if confidence < .80 or len(normalize(text)) < 2:
+                continue
+            points = np.asarray(points)
+            x, y = points.min(axis=0); right, bottom = points.max(axis=0)
+            box=clipped(float(x/image.width), float((y+top)/image.height),float((right-x)/image.width),float((bottom-y)/image.height))
+            if any(normalize(run.text)==normalize(text) and overlap(box,run.box)>.5 for run in runs):
+                continue
+            runs.append(TextRun(text[:140],box,float(confidence)))
+            if len(runs)>=350: break
+        if len(runs)>=350 or top+1600>=image.height: break
     return sorted(runs, key=lambda run: (run.box['y'], run.box['x'], run.text))
 
 
 def normalized_images(design, actual):
     # Feed OCR equally sized pixels: different DPI/resolution otherwise changes segmentation.
-    factor = min(1., 1600/max(actual.size))
+    factor = min(1., 1600/actual.width)
     size = (max(1, round(actual.width*factor)), max(1, round(actual.height*factor)))
     return (design.resize(size, Image.Resampling.LANCZOS),
             actual.resize(size, Image.Resampling.LANCZOS))
@@ -74,7 +79,7 @@ def normalized_images(design, actual):
 def visual_diff(design: Image.Image, actual: Image.Image, viewport_width=None) -> dict:
     if abs((design.width/design.height)/(actual.width/actual.height)-1) > .10:
         raise HTTPException(422, 'Reference and capture proportions differ by over 10%. Minor differences are normalized automatically; for this larger mismatch, crop the reference or adjust the viewport before comparing.')
-    factor = min(1., 960/max(actual.size))
+    factor = min(1., 960/actual.width, math.sqrt(2_000_000/(actual.width*actual.height)))
     size = (max(1, round(actual.width*factor)), max(1, round(actual.height*factor)))
     a = design.resize(size).filter(ImageFilter.GaussianBlur(.6))
     b = actual.resize(size).filter(ImageFilter.GaussianBlur(.6))
@@ -96,7 +101,7 @@ def visual_diff(design: Image.Image, actual: Image.Image, viewport_width=None) -
     count, _, stats, _ = cv2.connectedComponentsWithStats(grouped, connectivity=8)
     regions = []
     for x, y, width, height, area in stats[1:count]:
-        if area < max(12, size[0]*size[1]*.00015):
+        if area < min(96, max(12, size[0]*size[1]*.00015)):
             continue
         regions.append(clipped(float(x/size[0]), float(y/size[1]), float(width/size[0]), float(height/size[1])))
     regions.sort(key=lambda box: (-box['width']*box['height'], box['y'], box['x']))

@@ -1,6 +1,6 @@
 # project-1 local UI validation
 
-A Chrome / Edge DevTools extension with a Python FastAPI backend. Upload a design, capture the visible website viewport, compare with local image processing and OCR, review numbered findings, and export annotated PNG/PDF reports. No API key, cloud model, external AI service, or per-comparison fee is required. Existing history, annotations, review controls, and downloads are preserved.
+A Chrome / Edge DevTools extension with a Python FastAPI backend. Upload a design, capture the entire scrollable website page, compare with local image processing and OCR, review numbered findings, and export annotated PNG/PDF reports. No API key, cloud model, external AI service, or per-comparison fee is required. Existing history, annotations, review controls, and downloads are preserved.
 
 ## Run the local version
 
@@ -30,14 +30,14 @@ No OpenAI configuration is read by the comparison engine. Old API key/model entr
 
 1. Upload a PNG/JPG or PDF under 10 MB. Select a page for a multi-page PDF. Images are limited to 24 megapixels and 12,000 pixels per side.
 2. Minor differences in screenshot proportions (up to 10%) are normalized automatically. Results include a note above 1%, since resizing can affect spacing and size measurements. Larger mismatches need cropping or a viewport adjustment. Docked DevTools can also reflow the page, which image normalization cannot undo.
-3. Keep the inspected website active, wait for fonts/images, and pause animation. Click **Capture viewport** and grant the optional website-access permission when prompted.
+3. Click **Capture full page** and grant the optional website-access permission when prompted. Keep the inspected website active and do not scroll while it captures. The extension scrolls and stitches the document, then restores your original position. Output uses CSS-pixel resolution to fit local processing limits.
 4. Click **Compare & analyze**. Both images and supplied visible DOM information are processed only by the Python service on your computer.
 5. Review findings under Issues, select a numbered issue to emphasize its screenshot annotation, and dismiss/restore findings as appropriate.
-6. **Locate on live page** shows an eight-second highlight if URL, scroll position, and viewport still match. It clears on scrolling/resizing. Content changes at identical coordinates cannot reliably be detected; recapture after changes.
+6. **Locate on live page** scrolls to below-fold issues and shows an eight-second highlight if URL, document size, and viewport still match. Legacy viewport captures still require the original scroll position. It clears on scrolling/resizing. Content changes at identical coordinates cannot reliably be detected; recapture after changes.
 7. Download PNG/PDF from Issues or Report. Dismissed findings are omitted from exports; PDF includes a dismissed count.
 8. History keeps the latest 15 comparisons locally. Existing records remain readable and are labeled as legacy findings when they lack the new evidence classification.
 
-For a same-image self-check, click **Capture viewport**, then **Download raw capture**. Upload that PNG as the reference and compare without recapturing or changing the page. This should return zero findings. Taking the reference before opening docked DevTools can change the viewport and cause the page to reflow; take both captures with the same docking, viewport, zoom, crop, and scroll position.
+For a same-image self-check, click **Capture full page**, then **Download raw capture**. Upload that PNG as the reference and compare without recapturing or changing the page. This should return zero findings. Taking the reference before opening docked DevTools can change the viewport and cause the page to reflow; take both captures with the same docking, viewport, zoom, crop, and scroll position.
 
 The engine skips OCR findings when no changed regions exceed rendering tolerance, normalizes OCR inputs to the same resolution, and requires local changed-pixel evidence for text/layout rules. Consistent whole-page shifts are grouped into one capture-alignment diagnostic rather than many separate label issues. Genuine small changed regions are retained even when the overall pixel-change percentage is low.
 
@@ -62,7 +62,7 @@ Dependencies/models must be downloaded once during installation. After setup, OC
 
 The service binds to `127.0.0.1:8765`, restricts comparison requests to the configured extension origin, processes images in memory, and does not save reports on disk. Do not expose this development service publicly. Browser history uses IndexedDB and is not encrypted. Delete individual saved records in History; uninstalling removes extension storage. Input/textarea/select values are omitted from DOM extraction, but screenshots can contain private information.
 
-No hosted sharing, direct Figma integration, code changes, full-page capture, or automated multi-viewport testing is included. PDF reports use a Latin font; unsupported characters become `?` while screenshots retain their original text visually.
+No hosted sharing, direct Figma integration, code changes, or automated multi-viewport testing is included. Long screenshots are split across PDF pages at readable width. PDF reports use a Latin font; unsupported characters become `?` while screenshots retain their original text visually.
 
 ## Fresh installation and development
 
@@ -85,7 +85,7 @@ Core files:
 - `backend/app.py`: origin checks, validation, bounded concurrency, health and comparison routes.
 - `src/main.tsx`: existing Compare, Issues, Report, History, and Settings interface.
 - `src/images.ts`: numbered annotations and PNG/PDF downloads.
-- `src/storage.ts`: unchanged IndexedDB history.
+- `src/storage.ts`: IndexedDB history and atomic Undo restoration.
 - `background.js`: unchanged inspected-tab capture and temporary highlights.
 
 ## Verification
@@ -96,6 +96,7 @@ pnpm test
 .\.venv\Scripts\python.exe -m pytest backend/test_local.py backend/test_tolerance.py -q
 node tests/ui.mjs
 node tests/runtime.mjs
+node tests/capture-regression.mjs
 ```
 
 Backend tests cover validation, origin restrictions, missing-key independence, rule evidence, repeated labels, and real OCR/comparison with network connections forbidden. UI tests use a mocked comparison response to verify PDF input, history persistence, dismiss/restore, annotations, and PNG/PDF downloads. Runtime tests use an isolated headless Edge profile and the real Python service to capture a page and compare a shifted button with actual local OCR. They do not alter your normal browser profile. The runtime test needs port 8765 free.
@@ -103,3 +104,13 @@ Backend tests cover validation, origin restrictions, missing-key independence, r
 Evaluate representative design/website pairs manually to measure false positives, missed labels, and accepted findings. The rules are deterministic for fixed OCR output; CPU inference and image rendering may vary slightly across platforms.
 
 Local OCR uses [RapidOCR](https://github.com/RapidAI/RapidOCR), distributed under Apache-2.0, with bundled model artifacts in the [rapidocr-onnxruntime package](https://pypi.org/project/rapidocr-onnxruntime/). These are local software dependencies, not hosted services.
+
+## Full-page capture limits
+
+Captures include the top-level document in both scroll directions. Fixed elements are recorded once and suppressed after scroll handlers run on subsequent tiles, including controls inside open shadow roots. Sticky elements are temporarily rendered in their natural document positions so they are preserved once instead of repeated or omitted. Capture width uses reachable document scrolling; clipped body overflow does not add blank columns. Scroll position, visibility, and animation styles are restored even if capture fails. Independently scrolling inner panels are captured as rendered, not expanded. Infinite-scroll or changing-size pages must finish loading first; a size change aborts with an explanation instead of returning a partial screenshot. Full pages are bounded to 24 megapixels, 12,000 CSS pixels per side, 80 tiles, and an 8.5 MB PNG payload. Larger pages show an actionable error rather than being silently truncated. OCR scans overlapping strips so text below the fold remains legible, with the existing 350-text-region and 40-finding limits.
+
+## Compact workspace and deletion recovery
+
+The Compare view uses a compact header, smaller preview panels, expandable capture help, and collapsible recent comparisons. A persistent bottom action bar keeps Compare visible and explains missing inputs or service setup. Comparison is disabled while the local service is offline; uploads, capture, history, and downloads remain available. Connection guidance includes a retry button and expandable startup instructions. The connection is rechecked periodically.
+
+Deleting a comparison removes it immediately and shows an Undo notification for 12 seconds. Hovering over or focusing the notification pauses dismissal. Consecutive deletions are grouped so Undo restores all pending items together, including their images and reviewed findings. The deletion is finalized when the notification expires, is dismissed, or the panel is reloaded. Undo restores the stored record rather than rerunning analysis.
