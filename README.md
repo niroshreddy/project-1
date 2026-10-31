@@ -34,7 +34,7 @@ No OpenAI configuration is read by the comparison engine. Old API key/model entr
 4. Click **Compare & analyze**. Both images and supplied visible DOM information are processed only by the Python service on your computer.
 5. Review findings under Issues, select a numbered issue to emphasize its screenshot annotation, and dismiss/restore findings as appropriate.
 6. **Locate on live page** scrolls to below-fold issues and shows an eight-second highlight if URL, document size, and viewport still match. Legacy viewport captures still require the original scroll position. It clears on scrolling/resizing. Content changes at identical coordinates cannot reliably be detected; recapture after changes.
-7. Download PNG/PDF from Issues or Report. Dismissed findings are omitted from exports; PDF includes a dismissed count.
+7. Download PNG/PDF from Results. Dismissed findings are omitted from exports; PDF includes a dismissed count.
 8. History keeps the latest 15 comparisons locally. Existing records remain readable and are labeled as legacy findings when they lack the new evidence classification.
 
 For a same-image self-check, click **Capture full page**, then **Download raw capture**. Upload that PNG as the reference and compare without recapturing or changing the page. This should return zero findings. Taking the reference before opening docked DevTools can change the viewport and cause the page to reflow; take both captures with the same docking, viewport, zoom, crop, and scroll position.
@@ -83,7 +83,7 @@ Core files:
 
 - `backend/local_engine.py`: local OCR, matching, pixel processing, evidence rules.
 - `backend/app.py`: origin checks, validation, bounded concurrency, health and comparison routes.
-- `src/main.tsx`: existing Compare, Issues, Report, History, and Settings interface.
+- `src/main.tsx`: Compare, Results, History, and Settings interface.
 - `src/images.ts`: numbered annotations and PNG/PDF downloads.
 - `src/storage.ts`: IndexedDB history and atomic Undo restoration.
 - `background.js`: unchanged inspected-tab capture and temporary highlights.
@@ -114,3 +114,24 @@ Captures include the top-level document in both scroll directions. Fixed element
 The Compare view uses a compact header, smaller preview panels, expandable capture help, and collapsible recent comparisons. A persistent bottom action bar keeps Compare visible and explains missing inputs or service setup. Comparison is disabled while the local service is offline; uploads, capture, history, and downloads remain available. Connection guidance includes a retry button and expandable startup instructions. The connection is rechecked periodically.
 
 Deleting a comparison removes it immediately and shows an Undo notification for 12 seconds. Hovering over or focusing the notification pauses dismissal. Consecutive deletions are grouped so Undo restores all pending items together, including their images and reviewed findings. The deletion is finalized when the notification expires, is dismissed, or the panel is reloaded. Undo restores the stored record rather than rerunning analysis.
+
+## DevTools drawer workflow
+
+The internal UI is named UI Compare; the browser DevTools tab remains project-1. A single toolbar replaces the large product header. Compare and History are always available; Results appears only after a comparison or when opening a saved record. PNG/PDF exports are actions inside Results. Settings is accessed through the gear icon. Empty recent history is hidden, and nonempty recent items are collapsed by default.
+
+The Local disclosure owns connection status, privacy information, capture guidance, and startup instructions. The panel follows Chrome DevTools themeName and live theme-change notifications, with system-theme fallback outside DevTools.
+
+Each comparison exposes these controls directly in the workspace:
+
+- Viewport: the inspected page's live width and height, or the captured viewport when live inspection is unavailable. Resize the inspected page or use Chrome's device toolbar to change it. A width change requires a fresh capture.
+- Scale: Fit reference normalizes the reference to the capture, subject to the existing 10% proportion limit. Exact pixels rejects images with different pixel dimensions instead of silently scaling them.
+- Tolerance: 0–16 CSS pixels, default 8. Larger values suppress minor local spacing/rendering differences and can hide small defects. OCR geometry checks use conservative thresholds derived from this value.
+
+The selected scale/tolerance values are sent to the local engine and saved with the result and PDF report. Old history remains readable without a schema migration. Ctrl+Enter (Cmd+Enter on macOS) runs a ready comparison when focus is inside the panel. The bottom action bar remains visible in a 400px-high drawer.
+
+### Ignore regions and visual review
+After capturing a page, use **Draw ignore regions** to drag rectangles over the capture. Up to 20 regions can be excluded; remove them individually or clear all. Regions use relative page coordinates and apply to both images after scale normalization. Replacing the reference or recapturing clears the selection. Run **Compare & analyze** after editing regions. Saved comparisons retain their regions in local history, and PDF reports record the exclusion count. Raw captures and reference images remain unchanged.
+
+In Results, choose **Side-by-side**, **Overlay**, or **Difference** from the View control. Overlay offers a reference-opacity slider. Difference displays raw absolute RGB differences (black means identical), without spacing tolerance or rendering-noise filtering; it is a visual aid rather than a finding score. Teal blocks cover ignored regions in both blended modes. Large blended previews are downsampled to at most 1600 pixels wide / 4 megapixels for browser memory; original images and exports retain their resolution.
+
+Restart the Python backend after updating to this version so it accepts the new `ignoreRegions` comparison option.

@@ -1,4 +1,4 @@
-import type { Capture, Comparison, Design } from './types';
+import type { Capture, Comparison, Design, ComparisonOptions } from './types';
 export const API = 'http://127.0.0.1:8765';
 export async function message<T>(payload: object): Promise<T> {
   if (!globalThis.chrome?.devtools) throw new Error('Open this panel from the installed extension in Developer Tools.');
@@ -14,11 +14,11 @@ export async function capturePage(): Promise<Capture> {
   if (!granted) throw new Error('Website access is needed for viewport capture. Click Capture again to grant access.');
   return message<Capture>({ type: 'captureFullPage' });
 }
-export async function compare(design: Design, capture: Capture, signal: AbortSignal): Promise<Comparison> {
+export async function compare(design: Design, capture: Capture, signal: AbortSignal, options: ComparisonOptions): Promise<Comparison> {
   const response = await fetch(`${API}/compare`, { method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ design:design.image, actual:capture.image, snapshot:capture.snapshot }), signal });
+    body: JSON.stringify({ design:design.image, actual:capture.image, snapshot:capture.snapshot, options }), signal });
   const data = await response.json();
   if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'The comparison service rejected the request. Check image dimensions and restart the backend.');
-  return { id:crypto.randomUUID(), createdAt:new Date().toISOString(), design, capture, ...data,
+  return { id:crypto.randomUUID(), createdAt:new Date().toISOString(), design, capture, ...data, options,
     issues:data.issues.map((issue: object, index: number) => ({ ...issue, id:`issue-${index+1}` })) };
 }

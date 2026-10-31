@@ -62,7 +62,9 @@ export async function exportPdf(record: Comparison) {
   line(`Captured: ${new Date(record.capture.capturedAt).toLocaleString()}`);
   line(`URL: ${record.capture.snapshot.url}`);
   line(`${record.capture.snapshot.fullPage ? 'Full page' : 'Viewport'}: ${record.capture.snapshot.width} x ${record.capture.snapshot.height} CSS px | Engine: ${record.model}`);
+  if(record.options) line(`Comparison settings: tolerance ${record.options.tolerancePx} CSS px; ${record.options.normalization==='fit'?'fit reference to capture':'exact pixel dimensions'}.`);
   line(`${visibleIssues(record).length} active findings; ${record.issues.filter(i => i.dismissed).length} dismissed. Pixel change: ${record.diff.changedPercent}% (not an accuracy score).`);
+  if(record.options?.ignoreRegions?.length) line(`Ignored regions: ${record.options.ignoreRegions.length}. Excluded from analysis at matching normalized positions in both images.`);
   line(record.summary);
   for (const [label, source] of [['Expected design', record.design.image], ['Annotated page', (await annotated(record)).toDataURL('image/png')]]) {
     const image = await imageFrom(source);

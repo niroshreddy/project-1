@@ -76,7 +76,7 @@ def normalized_images(design, actual):
             actual.resize(size, Image.Resampling.LANCZOS))
 
 
-def visual_diff(design: Image.Image, actual: Image.Image, viewport_width=None) -> dict:
+def visual_diff(design: Image.Image, actual: Image.Image, viewport_width=None, tolerance_px=8) -> dict:
     if abs((design.width/design.height)/(actual.width/actual.height)-1) > .10:
         raise HTTPException(422, 'Reference and capture proportions differ by over 10%. Minor differences are normalized automatically; for this larger mismatch, crop the reference or adjust the viewport before comparing.')
     factor = min(1., 960/actual.width, math.sqrt(2_000_000/(actual.width*actual.height)))
@@ -84,7 +84,7 @@ def visual_diff(design: Image.Image, actual: Image.Image, viewport_width=None) -
     a = design.resize(size).filter(ImageFilter.GaussianBlur(.6))
     b = actual.resize(size).filter(ImageFilter.GaussianBlur(.6))
     pixels_a, pixels_b = np.asarray(a).astype(np.int16), np.asarray(b).astype(np.int16)
-    radius = max(1, round(SPACING_TOLERANCE_CSS_PX*size[0]/(viewport_width or actual.width)))
+    radius = max(0, round(tolerance_px*size[0]/(viewport_width or actual.width)))
     kernel = np.ones((2*radius+1, 2*radius+1), np.uint8)
     def residual(source, target):
         lower, upper = cv2.erode(target, kernel), cv2.dilate(target, kernel)
@@ -164,7 +164,7 @@ def finding(title, category, expected, actual, explanation, recommendation, box,
                 recommendation=recommendation[:1000], annotation=annotation, box=box, basis=basis)
 
 
-def compare_rules(design, actual, snapshot, diff, expected_runs, actual_runs):
+def compare_rules(design, actual, snapshot, diff, expected_runs, actual_runs, tolerance_px=8):
     """Measured means an observed raster/geometry difference, not semantic certainty."""
     width, height = snapshot['width'], snapshot['height']
     pairs, unmatched, remaining = match_text(expected_runs, dom_runs(snapshot, actual_runs))
@@ -183,7 +183,7 @@ def compare_rules(design, actual, snapshot, diff, expected_runs, actual_runs):
             continue
         expected_gap = (other.box['y']-ref.box['y']-ref.box['height'])*height
         actual_gap = (current.box['y']-live.box['y']-live.box['height'])*height
-        if expected_gap >= 0 and actual_gap >= 0 and abs(expected_gap-actual_gap) > max(12, height*.015) and changed(ref.box, live.box, other.box, current.box):
+        if expected_gap >= 0 and actual_gap >= 0 and abs(expected_gap-actual_gap) > max(4, tolerance_px*1.5) and changed(ref.box, live.box, other.box, current.box):
             box = union(live.box, current.box)
             issues.append(finding('Vertical text spacing differs', 'spacing', f'Approximately {expected_gap:.0f} CSS px between recognized text regions.',
                 f'Approximately {actual_gap:.0f} CSS px between recognized text regions.',
@@ -194,7 +194,7 @@ def compare_rules(design, actual, snapshot, diff, expected_runs, actual_runs):
         a, b = ref.box, live.box
         dx = (center(b)[0]-center(a)[0])*width
         dy = (center(b)[1]-center(a)[1])*height
-        if score == 1 and live.source == 'ocr' and changed(a, b) and (abs(dx) > max(12,width*.01) or abs(dy) > max(12,height*.01)) and not any(overlap(b, box) > .6 for box in handled):
+        if score == 1 and live.source == 'ocr' and changed(a, b) and (abs(dx) > max(4,tolerance_px*1.5) or abs(dy) > max(4,tolerance_px*1.5)) and not any(overlap(b, box) > .6 for box in handled):
             issues.append(finding(f'Text position differs: {ref.text}', 'layout',
                 f'Text center around ({center(a)[0]*width:.0f}, {center(a)[1]*height:.0f}) CSS px.',
                 f'Text center around ({center(b)[0]*width:.0f}, {center(b)[1]*height:.0f}) CSS px.',
@@ -261,8 +261,10 @@ def compare_rules(design, actual, snapshot, diff, expected_runs, actual_runs):
     return output
 
 
-def _analyze(design, actual, snapshot):
-    diff = visual_diff(design, actual, snapshot['width'])
+def _analyze(design, actual, snapshot, options):
+    if options['normalization']=='strict' and design.size!=actual.size:
+        raise HTTPException(422, 'Exact pixels requires reference and capture images with identical dimensions. Select Fit reference to normalize their size.')
+    diff = visual_diff(design, actual, snapshot['width'], options['tolerancePx'])
     # Identical rasters need no OCR inference and must never create semantic findings.
     if design.size == actual.size and ImageChops.difference(design, actual).getbbox() is None:
         return dict(summary='The two screenshots are identical. No visible differences were found.', issues=[], diff=diff, model=ENGINE)
@@ -277,7 +279,7 @@ def _analyze(design, actual, snapshot):
                              (center(b.box)[1]-center(a.box)[1])*snapshot['height']] for a, b in exact])
         median = np.median(offsets, axis=0)
         consistent = np.max(np.abs(offsets-median), axis=1) < 4
-        if float(consistent.mean()) >= .8 and len(exact) >= .75*max(len(expected), len(observed)) and max(abs(median)) > 12:
+        if float(consistent.mean()) >= .8 and len(exact) >= .75*max(len(expected), len(observed)) and max(abs(median)) > max(4,options['tolerancePx']*1.5):
             issue = finding('Whole-page alignment differs; check capture setup', 'layout',
                 'Reference and live page captured at the same viewport, scroll position, and crop.',
                 f'Most matched text is offset about {median[0]:+.0f} CSS px horizontally and {median[1]:+.0f} CSS px vertically.',
@@ -285,7 +287,7 @@ def _analyze(design, actual, snapshot):
                 'Keep DevTools in the same dock position for both captures, match the viewport and scroll position, and use a page-only screenshot. Check the shared page container if the shift remains.',
                 dict(x=0., y=0., width=1., height=1.), 'measured', .9, 'arrow')
             return dict(summary='The screenshots have a consistent global alignment difference. Check the capture setup before investigating individual UI defects.', issues=[issue], diff=diff, model=ENGINE)
-    issues = compare_rules(design, actual, snapshot, diff, expected, observed)
+    issues = compare_rules(design, actual, snapshot, diff, expected, observed, options['tolerancePx'])
     possible = sum(issue['basis']=='possible' for issue in issues)
     summary = f'Local comparison found {len(issues)} findings: {len(issues)-possible} measured differences and {possible} possible issues. OCR read {len(expected)} reference and {len(observed)} live text regions. Review OCR matches and dynamic content; rule confidence is a heuristic, not an accuracy probability.'
     if not expected or not observed:
@@ -295,8 +297,24 @@ def _analyze(design, actual, snapshot):
     return dict(summary=summary, issues=issues, diff=diff, model=ENGINE)
 
 
-def analyze(design, actual, snapshot):
-    result = _analyze(design, actual, snapshot)
+def analyze(design, actual, snapshot, options=None):
+    options = options or dict(tolerancePx=8,normalization='fit')
+    regions = options.get('ignoreRegions', [])
+    if regions:
+        from PIL import ImageDraw
+        design, actual = design.copy(), actual.copy()
+        for image in (design, actual):
+            draw = ImageDraw.Draw(image)
+            for box in regions:
+                x0, y0 = math.floor(box['x']*image.width), math.floor(box['y']*image.height)
+                x1 = math.ceil((box['x']+box['width'])*image.width)-1
+                y1 = math.ceil((box['y']+box['height'])*image.height)-1
+                draw.rectangle((x0, y0, x1, y1), fill='white')
+        snapshot = {**snapshot, 'elements': [element for element in snapshot.get('elements', [])
+                    if not any(overlap(element['box'], box) > 0 for box in regions)]}
+    result = _analyze(design, actual, snapshot, options)
+    if regions:
+        result['summary'] += f' {len(regions)} ignored regions were excluded from both images; pixel percentage uses the whole image area.'
     difference = abs((design.width/design.height)/(actual.width/actual.height)-1)
     if difference > .01:
         result['summary'] += f' Screenshot proportions differed by {difference*100:.1f}% and were automatically normalized. Size and spacing findings may reflect this adjustment; review them before changing the page.'

@@ -11,4 +11,5 @@ export type Snapshot = { url: string; title: string; width: number; height: numb
 export type Capture = { image: string; snapshot: Snapshot; capturedAt: string };
 export type Design = { image: string; name: string; width: number; height: number };
 export type Diff = { changedPercent: number; regions: Box[] };
-export type Comparison = { id: string; createdAt: string; capture: Capture; design: Design; diff: Diff; issues: Issue[]; summary: string; model: string };
+export type ComparisonOptions = { tolerancePx: number; normalization: 'fit' | 'strict'; ignoreRegions?: Box[] };
+export type Comparison = { id: string; createdAt: string; capture: Capture; design: Design; diff: Diff; issues: Issue[]; summary: string; model: string; options?: ComparisonOptions };

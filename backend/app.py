@@ -88,11 +88,19 @@ class Snapshot(BaseModel):
     elements: list[Element] = Field(max_length=350)
 
 
+class ComparisonOptions(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    tolerancePx: int = Field(default=8, ge=0, le=16)
+    normalization: Literal['fit', 'strict'] = 'fit'
+    ignoreRegions: list[Box] = Field(default_factory=list, max_length=20)
+
+
 class CompareRequest(BaseModel):
     model_config = ConfigDict(extra='forbid')
     design: str = Field(max_length=12_000_000)
     actual: str = Field(max_length=12_000_000)
     snapshot: Snapshot
+    options: ComparisonOptions = Field(default_factory=ComparisonOptions)
 
 
 class Finding(BaseModel):
@@ -149,9 +157,10 @@ async def compare(payload: CompareRequest):
         if abs((actual.width / actual.height) / (payload.snapshot.width / payload.snapshot.height) - 1) > .03:
             raise HTTPException(422, 'Capture dimensions do not match the recorded page dimensions. Recapture.')
         try:
-            result = await asyncio.to_thread(analyze, design, actual, payload.snapshot.model_dump())
+            options = payload.options.model_dump()
+            result = await asyncio.to_thread(analyze, design, actual, payload.snapshot.model_dump(), options)
             validated = Analysis.model_validate(result)
-            return {**result, **validated.model_dump()}
+            return {**result, **validated.model_dump(), 'options': options}
         except HTTPException:
             raise
         except Exception as error:

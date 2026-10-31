@@ -1,1 +1,6 @@
-:root{color-scheme:light dark;--bg:#f6f8fc;--surface:#fff;--text:#172743;--muted:#56657c;--border:#e0e6f0;--accent:#4858ed;--hover:#edf1fa}@media(prefers-color-scheme:dark){:root{--bg:#151922;--surface:#1d2330;--text:#e6ecf7;--muted:#a1adc2;--border:#303a4d;--accent:#8290ff;--hover:#293247}.primary{color:#101725}.notice{background:#252f4a;color:#bdccff}.notice.error{background:#43232e;color:#ffb8c5}.file-button{background:#303966;color:#d4d9ff}.severity.high,.issue-number{background:#482835;color:#ff9fb0}.severity.medium{background:#443724;color:#f4cf87}}
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--text:#202733;--muted:#526078;--border:#dce1e8;--accent:#354bd7;--hover:#e9edf5}
+:root[data-theme='dark']{color-scheme:dark;--bg:#202124;--surface:#292a2d;--text:#e8eaed;--muted:#b0b7c3;--border:#42464d;--accent:#a0b2ff;--hover:#383e4c}
+:root[data-theme='dark'] .primary{color:#161b29}
+:root[data-theme='dark'] .notice.error{background:#43232e;color:#ffb8c5}
+:root[data-theme='dark'] .severity.high,:root[data-theme='dark'] .issue-number{background:#482835;color:#ff9fb0}
+:root[data-theme='dark'] .severity.medium{background:#443724;color:#f4cf87}
