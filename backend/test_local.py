@@ -204,7 +204,7 @@ def test_comparison_options_are_validated_and_returned(client):
     request=payload();request['options']={'tolerancePx':12,'normalization':'fit'}
     response=client.post('/compare',json=request)
     assert response.status_code==200
-    assert response.json()['options']=={**request['options'], 'ignoreRegions': []}
+    assert response.json()['options']==request['options']
     request['options']['tolerancePx']=99
     assert client.post('/compare',json=request).status_code==422
 
@@ -292,45 +292,3 @@ def test_ocr_receives_same_resolution_for_both_inputs(monkeypatch):
     monkeypatch.setattr(engine,'read_text',lambda image:sizes.append(image.size) or [])
     engine.analyze(design,actual,snapshot())
     assert sizes==[(1000,600),(1000,600)]
-
-def test_ignore_region_excludes_change_without_mutating_inputs(monkeypatch):
-    reference = Image.new('RGB', (1000,600), 'white')
-    actual = reference.copy()
-    ImageDraw.Draw(actual).rectangle((200,150,350,250), fill='red')
-    monkeypatch.setattr(engine, 'read_text', lambda image: [])
-    options = dict(tolerancePx=0, normalization='fit', ignoreRegions=[dict(x=.18,y=.2,width=.2,height=.25)])
-    result = engine.analyze(reference,actual,snapshot(),options)
-    assert result['diff']['changedPercent'] == 0
-    assert result['issues'] == []
-    assert actual.getpixel((220,180)) == (255,0,0)
-    assert 'ignored regions' in result['summary']
-
-
-def test_ignore_preserves_differences_outside_region(monkeypatch):
-    reference = Image.new('RGB', (1000,600), 'white')
-    actual = reference.copy()
-    draw = ImageDraw.Draw(actual)
-    draw.rectangle((200,150,350,250), fill='red')
-    draw.rectangle((700,400,820,480), fill='blue')
-    monkeypatch.setattr(engine, 'read_text', lambda image: [])
-    result = engine.analyze(reference,actual,snapshot(),dict(tolerancePx=0,normalization='fit',ignoreRegions=[dict(x=.18,y=.2,width=.2,height=.25)]))
-    assert result['diff']['changedPercent'] > 0
-    assert result['issues']
-    assert all(region['x'] > .6 for region in result['diff']['regions'])
-
-
-def test_ignore_region_validation(client):
-    request = payload()
-    request['options'] = dict(ignoreRegions=[dict(x=.9,y=0,width=.2,height=.1)])
-    assert client.post('/compare',json=request).status_code == 422
-    request['options'] = dict(ignoreRegions=[dict(x=0,y=0,width=.1,height=.1)]*21)
-    assert client.post('/compare',json=request).status_code == 422
-
-
-def test_ignore_options_roundtrip(client):
-    request = payload()
-    regions = [dict(x=.1,y=.2,width=.2,height=.3)]
-    request['options'] = dict(ignoreRegions=regions)
-    response = client.post('/compare',json=request)
-    assert response.status_code == 200
-    assert response.json()['options']['ignoreRegions'] == regions

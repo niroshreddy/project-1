@@ -10,7 +10,7 @@ import numpy as np
 from PIL import Image, ImageChops, ImageFilter
 from fastapi import HTTPException
 
-ENGINE = 'local-rules-v3'
+ENGINE = 'local-rules-v4'
 # Ignore small local displacements in either direction, rather than counting
 # antialiased edges at their old and new coordinates as separate defects.
 SPACING_TOLERANCE_CSS_PX = 8
@@ -164,7 +164,7 @@ def finding(title, category, expected, actual, explanation, recommendation, box,
                 recommendation=recommendation[:1000], annotation=annotation, box=box, basis=basis)
 
 
-def compare_rules(design, actual, snapshot, diff, expected_runs, actual_runs, tolerance_px=8):
+def compare_rules(design, actual, snapshot, diff, expected_runs, actual_runs, tolerance_px=8, components=True):
     """Measured means an observed raster/geometry difference, not semantic certainty."""
     width, height = snapshot['width'], snapshot['height']
     pairs, unmatched, remaining = match_text(expected_runs, dom_runs(snapshot, actual_runs))
@@ -235,6 +235,20 @@ def compare_rules(design, actual, snapshot, diff, expected_runs, actual_runs, to
                 'The expected text overlaps changed pixels, but OCR failure, wrapping, an image, or dynamic content may explain its absence. This does not prove a component is missing.',
                 'Inspect the marked location and verify whether the expected label or component is present.', ref.box, 'possible', .60, 'triangle'))
             handled.append(ref.box)
+    # Match non-text visual regions as well as OCR anchors. Ambiguous duplicates abstain.
+    if components:
+        from backend.component_matching import matches
+        for match in matches(design,actual,snapshot,tolerance_px):
+            before,after=match['reference'],match['actual']
+            if not changed(before,after) or any(overlap(after,box)>.5 for box in handled):continue
+            kind=match['kind'];category='style' if kind=='size' else kind
+            title={'layout':'Visual component position may differ','size':'Visual component size may differ','missing':'Possibly missing visual component'}[kind]
+            dom=next((element for element in snapshot['elements'] if overlap(after,element['box'])>.6),None)
+            context=f" Supplied live DOM overlaps a {dom['tag']} element." if dom else ''
+            issues.append(finding(title,category,'Reference bounded region at '+str({key:round(value,3) for key,value in before.items()}),match['detail'],
+                'Local contour and normalized RGB-patch matching found this correspondence.'+context+' This does not identify a semantic component or prove that an element is missing. Repeated shapes and ambiguous matches are excluded.',
+                'Review the reference and live region. Confirm component identity, viewport and dynamic content before changing layout or sizing.',after,'possible',.72,'triangle' if kind=='missing' else 'arrow' if kind=='layout' else 'measurement'))
+            handled.extend([before,after])
     # Report remaining image evidence without inventing component semantics.
     scaled_design = design.resize(actual.size)
     for region in diff['regions']:
@@ -261,7 +275,7 @@ def compare_rules(design, actual, snapshot, diff, expected_runs, actual_runs, to
     return output
 
 
-def _analyze(design, actual, snapshot, options):
+def _analyze(design, actual, snapshot, options, components=True):
     if options['normalization']=='strict' and design.size!=actual.size:
         raise HTTPException(422, 'Exact pixels requires reference and capture images with identical dimensions. Select Fit reference to normalize their size.')
     diff = visual_diff(design, actual, snapshot['width'], options['tolerancePx'])
@@ -287,7 +301,7 @@ def _analyze(design, actual, snapshot, options):
                 'Keep DevTools in the same dock position for both captures, match the viewport and scroll position, and use a page-only screenshot. Check the shared page container if the shift remains.',
                 dict(x=0., y=0., width=1., height=1.), 'measured', .9, 'arrow')
             return dict(summary='The screenshots have a consistent global alignment difference. Check the capture setup before investigating individual UI defects.', issues=[issue], diff=diff, model=ENGINE)
-    issues = compare_rules(design, actual, snapshot, diff, expected, observed, options['tolerancePx'])
+    issues = compare_rules(design, actual, snapshot, diff, expected, observed, options['tolerancePx'],components)
     possible = sum(issue['basis']=='possible' for issue in issues)
     summary = f'Local comparison found {len(issues)} findings: {len(issues)-possible} measured differences and {possible} possible issues. OCR read {len(expected)} reference and {len(observed)} live text regions. Review OCR matches and dynamic content; rule confidence is a heuristic, not an accuracy probability.'
     if not expected or not observed:
@@ -297,24 +311,9 @@ def _analyze(design, actual, snapshot, options):
     return dict(summary=summary, issues=issues, diff=diff, model=ENGINE)
 
 
-def analyze(design, actual, snapshot, options=None):
+def analyze(design, actual, snapshot, options=None, *, components=True):
     options = options or dict(tolerancePx=8,normalization='fit')
-    regions = options.get('ignoreRegions', [])
-    if regions:
-        from PIL import ImageDraw
-        design, actual = design.copy(), actual.copy()
-        for image in (design, actual):
-            draw = ImageDraw.Draw(image)
-            for box in regions:
-                x0, y0 = math.floor(box['x']*image.width), math.floor(box['y']*image.height)
-                x1 = math.ceil((box['x']+box['width'])*image.width)-1
-                y1 = math.ceil((box['y']+box['height'])*image.height)-1
-                draw.rectangle((x0, y0, x1, y1), fill='white')
-        snapshot = {**snapshot, 'elements': [element for element in snapshot.get('elements', [])
-                    if not any(overlap(element['box'], box) > 0 for box in regions)]}
-    result = _analyze(design, actual, snapshot, options)
-    if regions:
-        result['summary'] += f' {len(regions)} ignored regions were excluded from both images; pixel percentage uses the whole image area.'
+    result = _analyze(design, actual, snapshot, options,components)
     difference = abs((design.width/design.height)/(actual.width/actual.height)-1)
     if difference > .01:
         result['summary'] += f' Screenshot proportions differed by {difference*100:.1f}% and were automatically normalized. Size and spacing findings may reflect this adjustment; review them before changing the page.'

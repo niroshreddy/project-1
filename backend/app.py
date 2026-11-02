@@ -26,9 +26,11 @@ async def local_boundary(request: Request, call_next):
     extension_id = os.getenv('EXTENSION_ID', '')
     allowed = f'chrome-extension://{extension_id}' if extension_id else ''
     # Only the configured extension can submit or read local captures.
-    if request.url.path != '/health' and (not allowed or origin != allowed):
+    public_demo=request.method=='GET' and request.url.path in ('/journey/demo/buggy','/journey/demo/fixed')
+    if request.url.path != '/health' and not public_demo and (not allowed or origin != allowed):
         return JSONResponse({'detail': 'Set EXTENSION_ID in backend/.env to the installed extension ID.'}, status_code=403)
-    if request.headers.get('host', '') not in ('127.0.0.1:8765', 'localhost:8765', 'testserver'):
+    service_port=os.getenv('LOCAL_SERVICE_PORT','8765')
+    if request.headers.get('host', '') not in (f'127.0.0.1:{service_port}', f'localhost:{service_port}', 'testserver'):
         return JSONResponse({'detail': 'Invalid host.'}, status_code=403)
     if request.method == 'OPTIONS':
         response = JSONResponse({})
@@ -42,7 +44,7 @@ async def local_boundary(request: Request, call_next):
         response = await call_next(request)
     if allowed and origin == allowed:
         response.headers['Access-Control-Allow-Origin'] = allowed
-        response.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
+        response.headers['Access-Control-Allow-Methods'] = 'GET,POST,DELETE,OPTIONS'
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
         response.headers['Vary'] = 'Origin'
     return response
@@ -92,7 +94,6 @@ class ComparisonOptions(BaseModel):
     model_config = ConfigDict(extra='forbid')
     tolerancePx: int = Field(default=8, ge=0, le=16)
     normalization: Literal['fit', 'strict'] = 'fit'
-    ignoreRegions: list[Box] = Field(default_factory=list, max_length=20)
 
 
 class CompareRequest(BaseModel):
@@ -165,3 +166,9 @@ async def compare(payload: CompareRequest):
             raise
         except Exception as error:
             raise HTTPException(503, 'Local OCR/comparison failed. Install backend/requirements.txt with Python 3.11 or 3.12 and restart the service.') from error
+
+from backend.journey_api import register_journey_routes
+register_journey_routes(app)
+
+from backend.advisor import register_advisor
+register_advisor(app)

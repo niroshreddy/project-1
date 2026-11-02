@@ -56,7 +56,7 @@ try {
     return {status:response.status,body:await response.json()};
   },{design:captured.image,actual:changed.image,snapshot:changed.snapshot});
   assert.equal(comparison.status,200,JSON.stringify(comparison.body));
-  assert.equal(comparison.body.model,'local-rules-v3');
+  assert.equal(comparison.body.model,'local-rules-v4');
   assert(comparison.body.issues.length>0,'Real local comparison must detect changed button position');
   assert(comparison.body.issues.some(issue=>issue.basis==='measured'));
   await page.evaluate(()=>{

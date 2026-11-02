@@ -13,6 +13,7 @@ export async function rasterize(source: string, name: string): Promise<Design> {
   const ctx = canvas.getContext('2d')!; ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(image, 0, 0);
   return { name, image: canvas.toDataURL('image/png'), width: canvas.width, height: canvas.height };
 }
+export const ANNOTATION_COLORS = {border:'#e52d43',fill:'#e52d430b',selectedFill:'#e52d4330',marker:'#d62139',markerText:'#ffffff'} as const;
 export function visibleIssues(record: Comparison): Issue[] { return record.issues.filter(issue => !issue.dismissed); }
 export async function annotated(record: Comparison, selected?: string): Promise<HTMLCanvasElement> {
   const image = await imageFrom(record.capture.image);
@@ -64,8 +65,10 @@ export async function exportPdf(record: Comparison) {
   line(`${record.capture.snapshot.fullPage ? 'Full page' : 'Viewport'}: ${record.capture.snapshot.width} x ${record.capture.snapshot.height} CSS px | Engine: ${record.model}`);
   if(record.options) line(`Comparison settings: tolerance ${record.options.tolerancePx} CSS px; ${record.options.normalization==='fit'?'fit reference to capture':'exact pixel dimensions'}.`);
   line(`${visibleIssues(record).length} active findings; ${record.issues.filter(i => i.dismissed).length} dismissed. Pixel change: ${record.diff.changedPercent}% (not an accuracy score).`);
-  if(record.options?.ignoreRegions?.length) line(`Ignored regions: ${record.options.ignoreRegions.length}. Excluded from analysis at matching normalized positions in both images.`);
   line(record.summary);
+  if(record.approval) line(`Review decision: ${record.approval.status}; reviewer: ${record.approval.reviewer}; note: ${record.approval.note}`);
+  if(record.options?.alignment) line(`Reference alignment: x ${record.options.alignment.x}px; y ${record.options.alignment.y}px; scale ${record.options.alignment.scale}.`);
+  if(record.verification) for(const check of record.verification) line(`Verification: ${check.previousIssue} - ${check.outcome}. Not detected requires visual confirmation.`);
   for (const [label, source] of [['Expected design', record.design.image], ['Annotated page', (await annotated(record)).toDataURL('image/png')]]) {
     const image = await imageFrom(source);
     const sliceHeight = Math.max(1, Math.floor(image.width*236/176));
@@ -80,10 +83,10 @@ export async function exportPdf(record: Comparison) {
   pdf.addPage(); y=20; line('Findings',18);
   if (!visibleIssues(record).length) line('No active findings. This does not guarantee pixel-perfect compliance.');
   record.issues.forEach((issue,index) => {
-    if (issue.dismissed) return;
     if (y>215) { pdf.addPage(); y=20; }
     line(`${index+1}. ${issue.title} [${issue.severity}; confidence ${Math.round(issue.confidence*100)}%]`,12);
     line(`Evidence: ${issue.basis ?? 'legacy'}. Confidence is heuristic. Category: ${issue.category}. Location: ${Math.round(issue.box.x*100)}%, ${Math.round(issue.box.y*100)}% of captured page.`);
+    if(issue.review) line(`Review: ${issue.review.status}; owner: ${issue.review.owner||'unassigned'}; impact: ${issue.review.impact}; note: ${issue.review.comment}`);
     line(`Expected: ${issue.expected}`); line(`Actual: ${issue.actual}`);
     line(issue.explanation); line(`Recommendation: ${issue.recommendation}`);
   });

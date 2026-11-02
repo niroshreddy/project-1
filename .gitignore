@@ -8,3 +8,6 @@ backend/.env
 test-results/
 .requirements-review/
 artifacts/
+data/
+
+.env.*

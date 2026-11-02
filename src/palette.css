@@ -1,0 +1,25 @@
+a{color:var(--accent)}a:hover{text-decoration:underline}input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--teal)}
+.issue.selected{border-color:var(--highlight-border);box-shadow:0 0 0 1px var(--highlight-border)}
+.issue-number{background:var(--highlight-strong);color:var(--highlight-text)}
+:root[data-theme='dark'] .issue-number{background:var(--highlight-strong);color:var(--highlight-text)}
+.severity:not(.high):not(.medium){background:var(--preview);color:var(--muted)}
+.severity.medium{background:var(--highlight);color:var(--highlight-text)}
+:root[data-theme='dark'] .severity.medium{background:var(--highlight);color:var(--highlight-text)}
+.recommendation,.journey-finding,.advisor-finding{background:var(--highlight);border-left:3px solid var(--highlight-border);border-radius:4px}
+.capture-warnings{background:var(--highlight);border:1px solid var(--highlight-border);color:var(--highlight-text)}
+.notice:not(.error){background:var(--preview);border-color:var(--border);color:var(--text)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+
+/* Reference palette: navy header, muted teal actions, warm ivory surfaces. Colors only. */
+.workspace-header,.workspace-header header{background:var(--header);color:#f6f2e8;border-color:#365564}
+.tool-name .ui-icon{color:#b5d9d9}
+.workspace-header nav button{color:#f1eee4}
+.workspace-header nav button.active{background:var(--active);color:#fff;border-color:#b6d0ce}
+.workspace-header nav button:hover{background:#426c7a}
+.workspace-header .settings-button,.workspace-header .settings-button.active{color:#f5f0e4}
+.workspace-header .settings-button:hover{background:#426c7a}
+.trust-menu>summary,.trust-menu>summary.ready,:root[data-theme='dark'] .trust-menu>summary.ready{background:#426f7d;color:#fff}
+.trust-menu>summary.offline,.trust-menu>summary.setup{background:#4c5250;color:#ffe1ac}
+.workflow-steps .current .workflow-number{background:var(--navy);color:#fff}
+.workflow-steps li:not(:last-child)::after{background:#426478}
+.device-mode button[aria-pressed='true']{background:var(--navy);border-color:var(--navy);color:#fff}

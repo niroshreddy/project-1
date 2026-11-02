@@ -1,0 +1,270 @@
+{
+  "version": 1,
+  "description": "Synthetic labeled fixtures. Development and held-out parameter variants; not independent customer evidence. Labels are defined before rendering, not inferred from detector output.",
+  "cases": [
+    {
+      "id": "development-identical",
+      "split": "development",
+      "scenario": "identical",
+      "variant": 1,
+      "labels": []
+    },
+    {
+      "id": "development-minor-shift",
+      "split": "development",
+      "scenario": "minor-shift",
+      "variant": 1,
+      "labels": []
+    },
+    {
+      "id": "development-jpeg",
+      "split": "development",
+      "scenario": "jpeg",
+      "variant": 1,
+      "labels": []
+    },
+    {
+      "id": "development-dpi",
+      "split": "development",
+      "scenario": "dpi",
+      "variant": 1,
+      "labels": []
+    },
+    {
+      "id": "development-move",
+      "split": "development",
+      "scenario": "move",
+      "variant": 1,
+      "labels": [
+        {
+          "id": "target",
+          "category": "layout",
+          "region": "target"
+        }
+      ]
+    },
+    {
+      "id": "development-resize",
+      "split": "development",
+      "scenario": "resize",
+      "variant": 1,
+      "labels": [
+        {
+          "id": "target",
+          "category": "style",
+          "region": "target"
+        }
+      ]
+    },
+    {
+      "id": "development-missing",
+      "split": "development",
+      "scenario": "missing",
+      "variant": 1,
+      "labels": [
+        {
+          "id": "target",
+          "category": "missing",
+          "region": "target"
+        }
+      ]
+    },
+    {
+      "id": "development-color",
+      "split": "development",
+      "scenario": "color",
+      "variant": 1,
+      "labels": [
+        {
+          "id": "target",
+          "category": "style",
+          "region": "target"
+        }
+      ]
+    },
+    {
+      "id": "development-duplicate-missing",
+      "split": "development",
+      "scenario": "duplicate-missing",
+      "variant": 1,
+      "labels": [
+        {
+          "id": "target",
+          "category": "missing",
+          "region": "target"
+        }
+      ]
+    },
+    {
+      "id": "development-text-missing",
+      "split": "development",
+      "scenario": "text-missing",
+      "variant": 1,
+      "labels": [
+        {
+          "id": "target",
+          "category": "missing",
+          "region": "target"
+        }
+      ]
+    },
+    {
+      "id": "development-text-change",
+      "split": "development",
+      "scenario": "text-change",
+      "variant": 1,
+      "labels": [
+        {
+          "id": "target",
+          "category": "text",
+          "region": "target"
+        }
+      ]
+    },
+    {
+      "id": "development-text-move",
+      "split": "development",
+      "scenario": "text-move",
+      "variant": 1,
+      "labels": [
+        {
+          "id": "target",
+          "category": "layout",
+          "region": "target"
+        }
+      ]
+    },
+    {
+      "id": "holdout-identical",
+      "split": "holdout",
+      "scenario": "identical",
+      "variant": 2,
+      "labels": []
+    },
+    {
+      "id": "holdout-minor-shift",
+      "split": "holdout",
+      "scenario": "minor-shift",
+      "variant": 2,
+      "labels": []
+    },
+    {
+      "id": "holdout-jpeg",
+      "split": "holdout",
+      "scenario": "jpeg",
+      "variant": 2,
+      "labels": []
+    },
+    {
+      "id": "holdout-dpi",
+      "split": "holdout",
+      "scenario": "dpi",
+      "variant": 2,
+      "labels": []
+    },
+    {
+      "id": "holdout-move",
+      "split": "holdout",
+      "scenario": "move",
+      "variant": 2,
+      "labels": [
+        {
+          "id": "target",
+          "category": "layout",
+          "region": "target"
+        }
+      ]
+    },
+    {
+      "id": "holdout-resize",
+      "split": "holdout",
+      "scenario": "resize",
+      "variant": 2,
+      "labels": [
+        {
+          "id": "target",
+          "category": "style",
+          "region": "target"
+        }
+      ]
+    },
+    {
+      "id": "holdout-missing",
+      "split": "holdout",
+      "scenario": "missing",
+      "variant": 2,
+      "labels": [
+        {
+          "id": "target",
+          "category": "missing",
+          "region": "target"
+        }
+      ]
+    },
+    {
+      "id": "holdout-color",
+      "split": "holdout",
+      "scenario": "color",
+      "variant": 2,
+      "labels": [
+        {
+          "id": "target",
+          "category": "style",
+          "region": "target"
+        }
+      ]
+    },
+    {
+      "id": "holdout-duplicate-missing",
+      "split": "holdout",
+      "scenario": "duplicate-missing",
+      "variant": 2,
+      "labels": [
+        {
+          "id": "target",
+          "category": "missing",
+          "region": "target"
+        }
+      ]
+    },
+    {
+      "id": "holdout-text-missing",
+      "split": "holdout",
+      "scenario": "text-missing",
+      "variant": 2,
+      "labels": [
+        {
+          "id": "target",
+          "category": "missing",
+          "region": "target"
+        }
+      ]
+    },
+    {
+      "id": "holdout-text-change",
+      "split": "holdout",
+      "scenario": "text-change",
+      "variant": 2,
+      "labels": [
+        {
+          "id": "target",
+          "category": "text",
+          "region": "target"
+        }
+      ]
+    },
+    {
+      "id": "holdout-text-move",
+      "split": "holdout",
+      "scenario": "text-move",
+      "variant": 2,
+      "labels": [
+        {
+          "id": "target",
+          "category": "layout",
+          "region": "target"
+        }
+      ]
+    }
+  ]
+}

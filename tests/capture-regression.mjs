@@ -62,5 +62,11 @@ try {
   const horizontal=await worker.evaluate(id=>captureFullPage(id),tabId);
   const horizontalPixels=await inspectPixels(horizontal.image);
   assert.equal(horizontalPixels.width,1600);assert.deepEqual(horizontalPixels.right,[30,150,60,255]);
+  const quality=await worker.evaluate(async id=>{const [result]=await chrome.scripting.executeScript({target:{tabId:id},func:pageQuality});return result.result;},tabId);
+  assert.equal(quality.ready,true);assert.equal(quality.fontsReady,true);
+  await page.evaluate(()=>{const target=document.body.firstElementChild;window.qualityTimer=setInterval(()=>target.style.height=(parseInt(target.style.height)+10)+'px',40);});
+  const unstable=await worker.evaluate(async id=>{const [result]=await chrome.scripting.executeScript({target:{tabId:id},func:pageQuality});return result.result;},tabId);
+  await page.evaluate(()=>clearInterval(window.qualityTimer));
+  assert.equal(unstable.layoutStable,false);assert.equal(unstable.ready,false);
   console.log('PASS: fixed, scroll-mutated, shadow-root and late-created floats do not repeat; sticky content preserved; hidden overflow has no white padding; real horizontal content captured; styles/scroll restored.');
 } finally {await context?.close();await new Promise(resolve=>server.close(resolve));}

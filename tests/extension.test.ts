@@ -91,3 +91,46 @@ test('oversized full pages are rejected with state restored, never truncated',as
   const context=fullWorker(0,1000,13000);assert.match((await context.request()).error,/exceeds/);
   assert.equal(context.captures(),0);assert.equal(context.restored(),true);
 });
+
+function responsiveWorker(fail=false) {
+ let listener:Function,currentWidth=1000,scroll=120;
+ const updates:any[]=[],window={id:1,width:1016,height:800,left:20,top:30,state:'normal'};
+ const initial={...window};
+ const chrome={runtime:{id:'test',getURL:(path:string)=>`chrome-extension://test/${path}`,onMessage:{addListener:(fn:Function)=>listener=fn}},
+  windows:{get:async()=>({...window}),update:async(_id:number,values:any)=>{updates.push(values);Object.assign(window,values);if(values.width)currentWidth=values.width-16;return {...window};}},
+  tabs:{get:async()=>({active:true,url:'https://example.com/',windowId:1}),query:async()=>[{id:42}],captureVisibleTab:async()=>{if(fail)throw new Error('Screenshot failed');return 'data:image/png;base64,TEST';}},
+  scripting:{executeScript:async({func,args=[]}:any)=>{
+   const code=func.toString();
+   if(func.name==='pageQuality')return [{result:{ready:true,warnings:[]}}];
+   if(func.name==='inspectViewport')return [{result:{url:'https://example.com/',width:currentWidth,height:700,viewportWidth:currentWidth,viewportHeight:700,scrollX:0,scrollY:scroll,fullPage:false,elements:[]}}];
+   if(code.includes('({x:scrollX,y:scrollY})'))return [{result:{x:0,y:scroll}}];
+   if(code.includes('({width:innerWidth})'))return [{result:{width:currentWidth}}];
+   if(code.includes('=>innerWidth'))return [{result:currentWidth}];
+   if(code.includes('scrollTo')){scroll=args[1]??0;return [{result:undefined}];}
+   return [{result:{url:'https://example.com/',width:currentWidth,height:700,scrollX:0,scrollY:scroll}}];
+  }}
+ };
+ vm.runInNewContext(readFileSync('background.js','utf8'),{chrome,setTimeout:(fn:Function)=>{fn();return 0;}});
+ return {request:()=>new Promise<any>(resolve=>listener!({type:'captureResponsive',tabId:42,widths:[768,1024]},{id:'test',url:'chrome-extension://test/panel.html'},resolve)),window,initial,scroll:()=>scroll,updates};
+}
+test('responsive capture records exact widths and restores the window and scroll',async()=>{
+ const context=responsiveWorker(),result=await context.request();
+ assert.equal(result.data[0].snapshot.width,768);assert.equal(result.data[1].snapshot.width,1024);
+ assert.deepEqual(context.window,context.initial);assert.equal(context.scroll(),120);
+});
+test('responsive capture restores the window and scroll after failure',async()=>{
+ const context=responsiveWorker(true),result=await context.request();assert.match(result.error,/Screenshot failed/);
+ assert.deepEqual(context.window,context.initial);assert.equal(context.scroll(),120);
+});
+
+
+test('target viewport checks reject incorrect mobile dimensions before capture',async()=>{
+  let listener:Function;let captures=0;
+  const chrome={runtime:{id:'test',getURL:(path:string)=>`chrome-extension://test/${path}`,onMessage:{addListener:(fn:Function)=>listener=fn}},scripting:{executeScript:async()=>[{result:{width:390,height:844}}]},tabs:{captureVisibleTab:async()=>{captures++;}}};
+  vm.runInNewContext(readFileSync('background.js','utf8'),{chrome});
+  const request=(width:number,height:number)=>new Promise<any>(resolve=>listener!({type:'validateViewport',tabId:42,width,height},{id:'test',url:'chrome-extension://test/panel.html'},resolve));
+  assert.equal((await request(390,844)).data,true);
+  assert.match((await request(360,800)).error,/Live viewport is 390/);
+  assert.match((await request(0,844)).error,/Invalid viewport/);
+  assert.equal(captures,0);
+});

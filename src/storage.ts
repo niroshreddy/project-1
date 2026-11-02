@@ -23,7 +23,7 @@ export async function history(): Promise<Comparison[]> {
 export async function save(record: Comparison) {
   await transaction('readwrite', store => store.put(record));
   const records = await history();
-  for (const old of records.slice(15)) await remove(old.id);
+  for (const old of records.filter(item=>!item.pinned).slice(15)) await remove(old.id);
 }
 export async function remove(id: string) { await transaction('readwrite', store => store.delete(id)); }
 export async function restore(records: Comparison[]) {

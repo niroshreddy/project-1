@@ -1,6 +1,21 @@
-:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--text:#202733;--muted:#526078;--border:#dce1e8;--accent:#354bd7;--hover:#e9edf5}
-:root[data-theme='dark']{color-scheme:dark;--bg:#202124;--surface:#292a2d;--text:#e8eaed;--muted:#b0b7c3;--border:#42464d;--accent:#a0b2ff;--hover:#383e4c}
-:root[data-theme='dark'] .primary{color:#161b29}
+/* Shared app palette. Dark surfaces adapt to the selected DevTools theme. */
+:root,:root[data-theme='light']{
+ color-scheme:light;
+ --bg:#f5f3ed;--surface:#fffefa;--preview:#eeede7;
+ --text:#12384b;--muted:#536574;--border:#d8dcd7;--hover:#e6eeeb;
+ --header:#173c4e;--primary:#173c4e;--primary-hover:#245268;--on-primary:#ffffff;--active:#548593;
+ --navy:#173c4e;--teal:#548593;--teal-hover:#426e7b;--accent:#507f8c;
+ --status-bg:#e6f4ea;--status-text:#137333;
+ --highlight:#fff2e3;--highlight-strong:#fed7aa;--highlight-border:#b45309;--highlight-text:#9a3412;
+}
+:root[data-theme='dark']{
+ color-scheme:dark;
+ --bg:#162b32;--surface:#203b43;--preview:#1b333b;
+ --text:#f1ecdf;--muted:#bbc9c8;--border:#486069;--hover:#304e56;
+ --header:#102e3b;--primary:#83b5bd;--primary-hover:#9dc8ce;--on-primary:#102e3b;--active:#548593;
+ --navy:#102e3b;--teal:#548593;--teal-hover:#426e7b;--accent:#83b5bd;
+ --status-bg:#183d2a;--status-text:#81c995;
+ --highlight:#473424;--highlight-strong:#67472e;--highlight-border:#f2b36d;--highlight-text:#fed7aa;
+}
 :root[data-theme='dark'] .notice.error{background:#43232e;color:#ffb8c5}
-:root[data-theme='dark'] .severity.high,:root[data-theme='dark'] .issue-number{background:#482835;color:#ff9fb0}
-:root[data-theme='dark'] .severity.medium{background:#443724;color:#f4cf87}
+:root[data-theme='dark'] .severity.high{background:#482835;color:#ff9fb0}

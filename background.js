@@ -1,3 +1,21 @@
+// Read-only advisor evidence: no field values, screenshots, cookies or full page text.
+function collectAdvisorEvidence() {
+  const clean=value=>String(value||'').replace(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g,'[email]').replace(/\d{6,}/g,'[number]').replace(/\s+/g,' ').trim().slice(0,160);
+  const labelText=label=>{const clone=label.cloneNode(true);clone.querySelectorAll('input,select,textarea').forEach(node=>node.remove());return clone.textContent;};
+  const nodes=[...document.querySelectorAll('button,a[href],input,select,textarea,[role="button"],[role="link"]')];
+  const visible=nodes.filter(node=>{const r=node.getBoundingClientRect(),s=getComputedStyle(node);return r.width>0&&r.height>0&&r.bottom>0&&r.right>0&&r.top<innerHeight&&r.left<innerWidth&&s.visibility==='visible'&&s.display!=='none'&&s.opacity!=='0'&&node.type!=='hidden';});
+  const controls=visible.slice(0,160).map((node,index)=>{
+    const rect=node.getBoundingClientRect();
+    const references=attribute=>(node.getAttribute(attribute)||'').split(/\s+/).map(id=>document.getElementById(id)).filter(Boolean);
+    const labelled=references('aria-labelledby').map(el=>el.textContent).join(' ');
+    const labels=node.labels?[...node.labels].map(labelText).join(' '):'';
+    const content=['BUTTON','A'].includes(node.tagName)||node.getAttribute('role')==='button'?node.textContent:'';
+    const name=clean(labelled||node.getAttribute('aria-label')||labels||content||node.getAttribute('title')||node.getAttribute('alt'));
+    return {id:'e'+(index+1),tag:node.tagName.toLowerCase(),name,width:Math.round(rect.width*100)/100,height:Math.round(rect.height*100)/100,interactive:!node.disabled,needsLabel:true,invalid:node.getAttribute('aria-invalid')==='true',errorAssociated:[...references('aria-describedby'),...references('aria-errormessage')].some(el=>el.textContent?.trim())};
+  });
+  return {page:location.origin,capturedAt:new Date().toISOString(),width:innerWidth,height:innerHeight,overflow:Math.max(0,document.documentElement.scrollWidth-document.documentElement.clientWidth),total:visible.length,controls};
+}
+
 // Capture runs in the service worker so it always targets the inspected tab.
 function inspectViewport(fullPage = false) {
   document.getElementById('__project1_overlay')?.remove();
@@ -210,9 +228,77 @@ async function showHighlight(box, snapshot, label) {
   setTimeout(clear, 8000);
 }
 
+async function pageQuality() {
+  await Promise.race([document.fonts.ready,new Promise(resolve=>setTimeout(resolve,2500))]);
+  await Promise.race([Promise.all([...document.images].filter(image=>{const rect=image.getBoundingClientRect();return rect.bottom>0&&rect.top<innerHeight;}).map(image=>image.decode().catch(()=>{}))),new Promise(resolve=>setTimeout(resolve,2500))]);
+  const before=[document.documentElement.scrollWidth,document.documentElement.scrollHeight,innerWidth,innerHeight];
+  await new Promise(resolve=>setTimeout(resolve,300));
+  const after=[document.documentElement.scrollWidth,document.documentElement.scrollHeight,innerWidth,innerHeight];
+  const pendingImages=[...document.images].filter(image=>!image.complete&&image.getBoundingClientRect().bottom>0&&image.getBoundingClientRect().top<innerHeight).length;
+  const brokenImages=[...document.images].filter(image=>image.complete&&image.currentSrc&&image.naturalWidth===0).length;
+  const fontsReady=document.fonts.status==='loaded',layoutStable=before.every((value,index)=>value===after[index]);
+  const warnings=[];
+  if(!fontsReady)warnings.push('Web fonts are still loading.');
+  if(pendingImages)warnings.push(`${pendingImages} visible images are still loading.`);
+  if(brokenImages)warnings.push(`${brokenImages} images failed to load.`);
+  if(!layoutStable)warnings.push('Document dimensions changed while checking stability.');
+  if(document.querySelector('video,canvas'))warnings.push('Video or canvas content can change between captures.');
+  return {ready:fontsReady&&!pendingImages&&layoutStable,pendingImages,brokenImages,fontsReady,layoutStable,warnings};
+}
+let responsiveBusy=false;
+async function captureResponsive(tabId,widths) {
+ if(responsiveBusy||fullPageBusy)throw new Error('A capture is already running.');
+ if(!Array.isArray(widths)||widths.length<1||widths.length>5||widths.some(width=>!Number.isInteger(width)||width<320||width>2560))throw new Error('Choose 1–5 widths between 320 and 2560 CSS px.');
+ const tab=await chrome.tabs.get(tabId),original=await chrome.windows.get(tab.windowId);
+ if(!tab.active||!/^https?:/.test(tab.url||''))throw new Error('Select the inspected HTTP/HTTPS website before responsive capture.');
+ const [position]=await chrome.scripting.executeScript({target:{tabId},func:()=>({x:scrollX,y:scrollY})});
+ if(responsiveBusy||fullPageBusy)throw new Error('A capture is already running.');
+ responsiveBusy=true;
+ try {
+   const captures=[];
+   for(const width of widths){
+     for(let attempt=0;attempt<3;attempt++){
+       const [size]=await chrome.scripting.executeScript({target:{tabId},func:()=>({width:innerWidth})});
+       if(size.result.width===width)break;
+       const current=await chrome.windows.get(tab.windowId);
+       await chrome.windows.update(tab.windowId,{state:'normal',width:Math.max(320,current.width+width-size.result.width)});
+       await new Promise(resolve=>setTimeout(resolve,450));
+     }
+     const [size]=await chrome.scripting.executeScript({target:{tabId},func:()=>innerWidth});
+     if(size.result!==width)throw new Error(`Chrome could not reach ${width}px (actual ${size.result}px). Use device emulation and a single capture for narrower mobile widths.`);
+     const [quality]=await chrome.scripting.executeScript({target:{tabId},func:pageQuality});
+     if(!quality.result.ready)throw new Error(`Page is not ready at ${width}px. Wait for images/fonts/layout to settle.`);
+     await chrome.scripting.executeScript({target:{tabId},func:()=>scrollTo(0,0)});
+     const result=await capture(tabId);if(result.snapshot.url!==tab.url)throw new Error('The inspected page navigated during responsive capture. Run the suite again.');result.snapshot.quality=quality.result;captures.push(result);
+     await new Promise(resolve=>setTimeout(resolve,650));
+   }
+   return captures;
+ } finally {
+   await chrome.windows.update(tab.windowId,{state:'normal',width:original.width,height:original.height,left:original.left,top:original.top}).catch(()=>{});
+   if(original.state!=='normal')await chrome.windows.update(tab.windowId,{state:original.state}).catch(()=>{});
+   await chrome.scripting.executeScript({target:{tabId},func:(x,y)=>scrollTo(x,y),args:[position.result.x,position.result.y]}).catch(()=>{});
+   responsiveBusy=false;
+ }
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (sender.id !== chrome.runtime.id || !['panel.html', 'dist/panel.html'].some(path => sender.url === chrome.runtime.getURL(path))) return;
   const run = async () => {
+    if (message.type === 'advisorEvidence') {
+      const tab=await chrome.tabs.get(message.tabId);
+      if(!tab.active||!/^https?:/.test(tab.url||''))throw new Error('Select the inspected HTTP/HTTPS website to collect evidence.');
+      const [result]=await chrome.scripting.executeScript({target:{tabId:message.tabId},func:collectAdvisorEvidence});
+      return result.result;
+    }
+    if (message.type === 'captureResponsive') return captureResponsive(message.tabId,message.widths);
+    if (responsiveBusy) throw new Error('Responsive capture is in progress.');
+    if (message.type === 'validateViewport') {
+      if(!Number.isInteger(message.width)||!Number.isInteger(message.height)||message.width<320||message.width>2560||message.height<320||message.height>2560)throw new Error('Invalid viewport dimensions.');
+      const [size]=await chrome.scripting.executeScript({target:{tabId:message.tabId},func:()=>({width:innerWidth,height:innerHeight})});
+      if(size.result.width!==message.width||size.result.height!==message.height)throw new Error(`Live viewport is ${size.result.width} × ${size.result.height}. Set Device Toolbar to ${message.width} × ${message.height} CSS px, then capture again.`);
+      return true;
+    }
+    if (message.type === 'captureQuality') { const [quality]=await chrome.scripting.executeScript({target:{tabId:message.tabId},func:pageQuality}); return quality.result; }
     if (message.type === 'capture') return capture(message.tabId);
     if (message.type === 'captureFullPage') return captureFullPage(message.tabId);
     if (message.type === 'highlight') {

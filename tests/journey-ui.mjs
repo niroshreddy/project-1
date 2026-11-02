@@ -1,0 +1,65 @@
+// Real Python runner + synthetic checkout, isolated browser profile and data directory.
+import {chromium} from '@playwright/test';
+import {spawn} from 'node:child_process';
+import {createServer} from 'node:http';
+import {readFile,mkdir} from 'node:fs/promises';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+const root=path.resolve('dist');
+const files=createServer(async(req,res)=>{try{const pathname=new URL(req.url,'http://localhost').pathname;const file=path.resolve(root,'.'+pathname);if(!file.startsWith(root+path.sep))throw new Error();const data=await readFile(file);res.writeHead(200,{'Content-Type':{'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css'}[path.extname(file)]||'application/octet-stream'});res.end(data);}catch{res.writeHead(404).end();}});
+await new Promise(resolve=>files.listen(4179,'127.0.0.1',resolve));
+await mkdir('artifacts',{recursive:true});
+const python=process.platform==='win32'?'.venv/Scripts/python.exe':'.venv/bin/python';
+const dataDir=path.resolve('artifacts/journey-ui-'+Date.now());
+const backend=spawn(python,['-m','uvicorn','backend.app:app','--host','127.0.0.1','--port','8778'],{env:{...process.env,EXTENSION_ID:'journey-test',LOCAL_SERVICE_PORT:'8778',JOURNEY_ALLOWED_ORIGINS:'http://127.0.0.1:8778',JOURNEY_DATA_DIR:dataDir},stdio:'ignore'});
+let browser;
+try{
+ for(let i=0;i<80;i++){try{if((await fetch('http://127.0.0.1:8778/health')).ok)break;}catch{}await new Promise(resolve=>setTimeout(resolve,250));}
+ browser=await chromium.launch({executablePath:'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',headless:true});
+ const page=await browser.newPage({viewport:{width:1280,height:1000}});page.setDefaultTimeout(15000);
+ const errors=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.route('http://127.0.0.1:8765/**',async route=>{
+  const original=new URL(route.request().url());
+  const response=await route.fetch({url:'http://127.0.0.1:8778'+original.pathname,headers:{...route.request().headers(),origin:'chrome-extension://journey-test',host:'127.0.0.1:8778'}});
+  await route.fulfill({response,headers:{...response.headers(),'access-control-allow-origin':'http://127.0.0.1:4179'}});
+ });
+ await page.goto('http://127.0.0.1:4179/panel.html');
+ await page.getByRole('button',{name:'Journey Agent',exact:true}).click();
+ await page.getByText('Local runner connected',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Use local demo',exact:true}).click();
+ await page.getByLabel('Journey URL',{exact:true}).fill('http://127.0.0.1:8778/journey/demo/buggy');
+ await page.getByLabel('Confirm staging test',{exact:true}).check();
+ await page.getByRole('button',{name:'Use one viewport',exact:true}).click();
+ await page.getByRole('button',{name:'Discover form controls',exact:true}).click();
+ await page.getByText('Controls discovered. Review the selectors, synthetic values and success marker before starting.',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Start recovery investigation',exact:true}).click();
+ await page.getByRole('heading',{name:'data loss',exact:true}).waitFor({timeout:120000});
+ assert(await page.getByRole('region',{name:'Journey result',exact:true}).getByText('built-in',{exact:false}).count()>0);
+ assert(await page.getByText('reproduced',{exact:true}).count()>0);
+ await page.getByAltText('invalid checkout evidence',{exact:true}).waitFor();
+ await page.screenshot({path:'artifacts/journey-buggy-results.png',fullPage:true});
+ const pending=page.waitForEvent('download');await page.getByRole('button',{name:'Download evidence report (JSON)',exact:true}).click();
+ const download=await pending;await download.saveAs('artifacts/journey-report-test.json');
+ const report=JSON.parse(await readFile('artifacts/journey-report-test.json','utf8'));
+ assert.equal(report.result.planner,'built-in');assert(report.result.findings.some(item=>item.code==='data-loss'));
+ await page.getByText('Re-test a fix using this exact plan and data',{exact:true}).click();
+ await page.getByLabel('Verification URL',{exact:true}).fill('http://127.0.0.1:8778/journey/demo/fixed');
+ await page.getByLabel('Verification build',{exact:true}).fill('demo-fixed');
+ await page.getByLabel('Confirm verification staging',{exact:true}).check();
+ await page.getByRole('button',{name:'Re-test recovery fix',exact:true}).click();
+ await page.getByRole('heading',{name:'Baseline verification',exact:true}).waitFor({timeout:120000});
+ assert.equal(await page.getByRole('heading',{name:'data loss',exact:true}).count(),0);
+ await page.getByText('Record human review',{exact:true}).click();
+ await page.getByLabel('Journey reviewer',{exact:true}).fill('Synthetic QA reviewer');
+ await page.getByLabel('Journey review decision',{exact:true}).selectOption('verified-fixed');
+ await page.getByRole('button',{name:'Save journey review',exact:true}).click();
+ await page.getByText('Human decision recorded; automated evidence was retained.',{exact:true}).waitFor();
+ await page.setViewportSize({width:420,height:850});
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ await page.screenshot({path:'artifacts/journey-fixed-narrow.png',fullPage:true});
+ await page.getByRole('button',{name:'Compare',exact:true}).click();
+ await page.getByRole('heading',{name:'Reference design',exact:true}).waitFor();
+ assert.deepEqual(errors,[]);
+ await page.unrouteAll({behavior:'ignoreErrors'});
+ console.log('PASS: real Python form discovery, repeated buggy recovery findings, screenshots/JSON evidence, fixed-build re-test, human sign-off, narrow layout, and original Compare workflow retained. Local AI installation/inference was deferred.');
+}finally{await browser?.close();backend.kill();await new Promise(resolve=>files.close(resolve));}
