@@ -41,3 +41,15 @@ export async function captureResponsive(widths:number[]):Promise<Capture[]> {
  if(!granted)throw new Error('Website access is required for responsive captures.');
  return message<Capture[]>({type:'captureResponsive',widths});
 }
+
+export type PreviewSettings={width:number;height:number;presetId:string;orientation:'portrait'|'landscape'};
+export type PreviewInfo={active:boolean;tabId?:number;windowId?:number;url?:string;settings?:PreviewSettings;error?:string};
+export async function openDevicePreview(settings:PreviewSettings):Promise<PreviewInfo>{
+ if(!globalThis.chrome?.permissions)throw Error('Open project-1 in the installed DevTools extension.');
+ const granted=await chrome.permissions.request({origins:['<all_urls>']});
+ if(!granted)throw Error('Automatic device preview was not enabled. Website access must be granted by you.');
+ if(!await chrome.permissions.contains({permissions:['debugger']}))throw Error('Reload and re-enable the extension in chrome://extensions, approving its debugger permission.');
+ return message<PreviewInfo>({type:'previewOpen',settings});
+}
+export const resizeDevicePreview=(settings:PreviewSettings)=>message<PreviewInfo>({type:'previewResize',settings});
+export const captureDevicePreview=(settings:PreviewSettings,mode:'full-page'|'viewport')=>message<Capture>({type:'previewCapture',settings,mode});

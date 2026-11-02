@@ -4,10 +4,20 @@
   "version": "0.3.0",
   "description": "Compare a design with your live viewport using local OCR and visual rules. No API key or external AI service.",
   "devtools_page": "devtools.html",
-  "background": { "service_worker": "background.js" },
-  "permissions": ["storage", "scripting"],
-  "optional_host_permissions": ["<all_urls>"],
-  "host_permissions": ["http://127.0.0.1:8765/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "storage",
+    "scripting",
+    "debugger"
+  ],
+  "optional_host_permissions": [
+    "<all_urls>"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8765/*"
+  ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' http://127.0.0.1:8765; worker-src 'self';"
   }

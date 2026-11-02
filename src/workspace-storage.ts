@@ -1,5 +1,5 @@
 import {mobileScope,mobilePreset,type MobileSelection} from './device-presets';
-export type WorkspaceSnapshot={version:2;mode:'desktop'|'mobile';mobile:MobileSelection;values:Record<string,Record<string,unknown>>};
+export type WorkspaceSnapshot={version:2;mode:'desktop'|'mobile';mobile:MobileSelection;lastPhone?:MobileSelection;lastIpad?:MobileSelection;values:Record<string,Record<string,unknown>>};
 export const initialWorkspace=():WorkspaceSnapshot=>({version:2,mode:'desktop',mobile:{presetId:'390x844',orientation:'portrait'},values:{}});
 export function migrateWorkspace(data:unknown):WorkspaceSnapshot{
  if(data===undefined)return initialWorkspace();

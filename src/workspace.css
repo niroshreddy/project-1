@@ -336,3 +336,5 @@ button:focus-visible,input:focus-visible,select:focus-visible,.dropzone:focus-wi
 @media(max-width:600px){.device-controls{align-items:start}.device-controls label{flex-wrap:wrap}.device-guidance{margin-left:0}.inputs .empty-preview{height:120px}.compare-action{padding:4px 6px}.action-inner{padding:5px 7px}.action-buttons button{padding:6px 8px}.action-readiness strong,.action-readiness p{font-size:10px}}
 
 .device-controls .workspace-save-status{flex-basis:auto;margin-left:auto;font-size:11px;color:var(--muted)}@media(max-height:600px){.device-controls .workspace-save-status{font-size:10px}}
+
+.device-preview-controls{margin:0 0 12px;padding:12px 14px;font-size:12px}.device-preview-controls p{margin:4px 0 8px;overflow-wrap:anywhere}.device-preview-controls small{display:block;color:var(--muted);margin-top:8px}.preview-buttons{display:flex;gap:8px;flex-wrap:wrap}.device-preview-controls [role=alert]{color:var(--highlight-text)}

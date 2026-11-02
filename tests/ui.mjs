@@ -30,6 +30,7 @@ try {
   await page.goto(`http://127.0.0.1:4173${prefix}/panel.html`);
   await page.getByRole('button',{name:'Mobile',exact:true}).click();
   assert.equal(await page.getByLabel('Viewport preset',{exact:true}).inputValue(),'390x844');
+  await page.getByRole('button',{name:'iPad',exact:true}).click();
   await page.getByLabel('Viewport preset',{exact:true}).selectOption('820x1180');
   assert.equal(await page.getByLabel('Target viewport width',{exact:true}).inputValue(),'820');
   assert.equal(await page.getByLabel('Target viewport height',{exact:true}).inputValue(),'1180');
@@ -37,6 +38,8 @@ try {
   await page.getByRole('button',{name:'Landscape',exact:true}).click();
   assert.equal(await page.getByLabel('Target viewport width',{exact:true}).inputValue(),'1180');assert.equal(await page.getByLabel('Target viewport height',{exact:true}).inputValue(),'820');
   assert.equal(await page.locator('.tablet-frame.landscape-frame').count(),2);
+  await page.getByRole('button',{name:'Mobile',exact:true}).click();
+  await page.getByRole('button',{name:'Landscape',exact:true}).click();
   await page.getByLabel('Viewport preset',{exact:true}).selectOption('390x844');
   assert.equal(await page.getByLabel('Target viewport width',{exact:true}).inputValue(),'844','Preset changes should preserve landscape choice');assert.equal(await page.locator('.landscape-frame').count(),2);
   await page.getByRole('button',{name:'Portrait',exact:true}).click();
@@ -131,8 +134,10 @@ try {
   const phoneReference=page.getByLabel('Mobile reference screen',{exact:true}),phoneCapture=page.getByLabel('Mobile capture screen',{exact:true});
   await phoneReference.evaluate(el=>{el.scrollTop=(el.scrollHeight-el.clientHeight)*.6;});
   await page.waitForFunction(()=>{const screens=[...document.querySelectorAll('.phone-screen')];return screens.length===2&&screens.every(el=>Math.abs(el.scrollTop/Math.max(1,el.scrollHeight-el.clientHeight)-.6)<.02);});
+  await page.getByRole('button',{name:'iPad',exact:true}).click();
   await page.getByLabel('Viewport preset',{exact:true}).selectOption('1024x1366');
   assert.equal(await page.locator('.tablet-frame').count(),2);
+  await page.getByRole('button',{name:'Mobile',exact:true}).click();
   await page.getByLabel('Target viewport width',{exact:true}).fill('375');
   await page.getByLabel('Target viewport height',{exact:true}).fill('844');
   await page.getByLabel('Mobile preview zoom',{exact:true}).selectOption('150');

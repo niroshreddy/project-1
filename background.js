@@ -1,3 +1,4 @@
+if(typeof importScripts==='function')importScripts('device-preview.js');
 // Read-only advisor evidence: no field values, screenshots, cookies or full page text.
 function collectAdvisorEvidence() {
   const clean=value=>String(value||'').replace(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g,'[email]').replace(/\d{6,}/g,'[number]').replace(/\s+/g,' ').trim().slice(0,160);
@@ -281,9 +282,21 @@ async function captureResponsive(tabId,widths) {
  }
 }
 
+const devicePreview=globalThis.createDevicePreviewManager?.(chrome,{inspectViewport,pageQuality,positionFullPage,showHighlight});
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (sender.id !== chrome.runtime.id || !['panel.html', 'dist/panel.html'].some(path => sender.url === chrome.runtime.getURL(path))) return;
   const run = async () => {
+    if(typeof message.type==='string'&&message.type.startsWith('preview')){
+      if(!devicePreview)throw new Error('Reload the extension to enable device preview.');
+      if(message.type==='previewOpen')return devicePreview.open(message.tabId,message.settings);
+      if(message.type==='previewResize')return devicePreview.resize(message.tabId,message.settings);
+      if(message.type==='previewStatus')return devicePreview.status(message.tabId);
+      if(message.type==='previewCapture')return devicePreview.capture(message.tabId,message.settings,message.mode);
+      if(message.type==='previewFocus')return devicePreview.focus(message.tabId);
+      if(message.type==='previewClose')return devicePreview.close(message.tabId);
+      if(message.type==='previewHighlight')return devicePreview.highlight(message.tabId,message.previewTabId,message.previewSessionId,message.snapshot,message.box,message.label);
+    }
     if (message.type === 'advisorEvidence') {
       const tab=await chrome.tabs.get(message.tabId);
       if(!tab.active||!/^https?:/.test(tab.url||''))throw new Error('Select the inspected HTTP/HTTPS website to collect evidence.');

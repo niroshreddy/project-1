@@ -1,5 +1,5 @@
 import { copyFileSync, mkdirSync, cpSync, readFileSync, writeFileSync } from 'node:fs';
-for (const file of ['manifest.json', 'devtools.html', 'background.js']) copyFileSync(file, `dist/${file}`);
+for (const file of ['manifest.json', 'devtools.html', 'background.js', 'device-preview.js']) copyFileSync(file, `dist/${file}`);
 writeFileSync('dist/devtools.js', readFileSync('devtools.js', 'utf8').replace('"dist/panel.html"', '"panel.html"'));
 mkdirSync('dist/vendor', { recursive: true });
 copyFileSync('node_modules/pdfjs-dist/build/pdf.worker.min.mjs', 'dist/vendor/pdf.worker.min.mjs');

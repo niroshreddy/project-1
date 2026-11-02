@@ -1,4 +1,4 @@
-import {mobileScope,mobileDimensions,mobilePreset,type MobileSelection,type Orientation} from './device-presets';
+import {mobileScope,mobileDimensions,mobilePreset,isIpadPreset,type MobileSelection,type Orientation} from './device-presets';
 import React,{createContext,useContext,useEffect,useRef,useState} from 'react';
 import {loadWorkspace,saveWorkspace,type WorkspaceSnapshot} from './workspace-storage';
 export type DeviceMode='desktop'|'mobile';
@@ -21,16 +21,16 @@ export function useMobileWorkspace(){
  const select=(presetId:string,orientation:Orientation=snapshot.mobile.orientation)=>update(previous=>{
   if(!mobilePreset(presetId))return previous;
   const selection={presetId,orientation},scope=mobileScope(selection);let values=previous.values;
-  if(presetId==='custom'&&previous.mobile.presetId==='custom'&&!Object.hasOwn(values.targetWidth??{},scope)){
+  if(presetId.startsWith('custom')&&previous.mobile.presetId===presetId&&!Object.hasOwn(values.targetWidth??{},scope)){
    const old=mobileScope(previous.mobile),fallback=mobileDimensions(previous.mobile),width=Number(values.targetWidth?.[old]??fallback.width),height=Number(values.targetHeight?.[old]??fallback.height);
    values={...values,targetWidth:{...values.targetWidth,[scope]:orientation==='landscape'?Math.max(width,height):Math.min(width,height)},targetHeight:{...values.targetHeight,[scope]:orientation==='landscape'?Math.min(width,height):Math.max(width,height)}};
   }
-  return {...previous,mobile:selection,values};
+  return {...previous,mobile:selection,values,[isIpadPreset(presetId)?'lastIpad':'lastPhone']:selection};
  });
  const custom=(width:number,height:number)=>update(previous=>{
   const orientation=width>=320&&height>=320?(width>height?'landscape':'portrait'):previous.mobile.orientation;
-  const selection:MobileSelection={presetId:'custom',orientation},scope=mobileScope(selection);
-  return {...previous,mobile:selection,values:{...previous.values,targetWidth:{...previous.values.targetWidth,[scope]:width},targetHeight:{...previous.values.targetHeight,[scope]:height}}};
+  const selection:MobileSelection={presetId:isIpadPreset(previous.mobile.presetId)?'custom-ipad':'custom',orientation},scope=mobileScope(selection);
+  return {...previous,mobile:selection,[isIpadPreset(selection.presetId)?'lastIpad':'lastPhone']:selection,values:{...previous.values,targetWidth:{...previous.values.targetWidth,[scope]:width},targetHeight:{...previous.values.targetHeight,[scope]:height}}};
  });
  const clearComparison=(id:string)=>update(previous=>{
   const values={...previous.values,record:{...previous.values.record},selected:{...previous.values.selected},baselineId:{...previous.values.baselineId}};
@@ -38,7 +38,14 @@ export function useMobileWorkspace(){
   for(const [scope,baseline] of Object.entries(values.baselineId))if(baseline===id)values.baselineId[scope]='';
   return {...previous,values};
  });
- return {selection:snapshot.mobile,select,custom,clearComparison};
+ const chooseCategory=(category:'phone'|'ipad')=>update(previous=>{
+  const key=category==='ipad'?'lastIpad':'lastPhone';
+  const currentMatches=isIpadPreset(previous.mobile.presetId)===(category==='ipad');
+  const remembered=currentMatches?previous.mobile:previous[key];
+  const selection=remembered&&mobilePreset(remembered.presetId)&&isIpadPreset(remembered.presetId)===(category==='ipad')?remembered:{presetId:category==='ipad'?'ipad-mini':'390x844',orientation:'portrait' as const};
+  return {...previous,mode:'mobile',mobile:selection,[key]:selection};
+ });
+ return {selection:snapshot.mobile,select,custom,clearComparison,chooseCategory};
 }
 // Async operations retain the exact device/orientation scope that initiated them.
 export function useDeviceState<T>(mode:DeviceMode,key:string,desktop:T,mobile:T=desktop):[T,(value:T|((previous:T)=>T),target?:string)=>void]{

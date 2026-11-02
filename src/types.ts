@@ -9,7 +9,7 @@ export type Issue = {
 };
 export type ElementInfo = { tag: string; text: string; box: Box; fontSize: string; fontFamily: string; color: string; background: string; display: string; gap: string; padding: string };
 export type Snapshot = { url: string; title: string; width: number; height: number; viewportWidth?: number; viewportHeight?: number; fullPage?: boolean; dpr: number; scrollX: number; scrollY: number; elements: ElementInfo[]; quality?: {ready:boolean;pendingImages:number;brokenImages:number;fontsReady:boolean;layoutStable:boolean;warnings:string[]} };
-export type Capture = { device?:{mode:'desktop'|'mobile';width:number;height:number;presetId?:string;orientation?:'portrait'|'landscape'}; image: string; snapshot: Snapshot; capturedAt: string };
+export type Capture = { preview?:{ownerTabId:number;tabId:number;sessionId:string;width:number;height:number;presetId:string;orientation:'portrait'|'landscape'}; device?:{mode:'desktop'|'mobile';width:number;height:number;presetId?:string;orientation?:'portrait'|'landscape'}; image: string; snapshot: Snapshot; capturedAt: string };
 export type Design = { image: string; name: string; width: number; height: number };
 export type Diff = { changedPercent: number; regions: Box[] };
 export type ComparisonOptions = { tolerancePx: number; normalization: 'fit' | 'strict'; alignment?: {x:number;y:number;scale:number} };
