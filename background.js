@@ -297,6 +297,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if(message.type==='previewClose')return devicePreview.close(message.tabId);
       if(message.type==='previewHighlight')return devicePreview.highlight(message.tabId,message.previewTabId,message.previewSessionId,message.snapshot,message.box,message.label);
     }
+    if (message.type === 'accessibilityScan') {
+      const tab=await chrome.tabs.get(message.tabId);
+      if(!/^https?:/.test(tab.url||''))throw new Error('Open an HTTP/HTTPS website to run accessibility checks.');
+      const enginePath=sender.url===chrome.runtime.getURL('dist/panel.html')?'dist/vendor/axe.min.js':'vendor/axe.min.js';
+      await chrome.scripting.executeScript({target:{tabId:message.tabId},files:[enginePath]});
+      const [result]=await chrome.scripting.executeScript({target:{tabId:message.tabId},func:async()=>{
+        if(!globalThis.axe)throw Error('Accessibility engine did not load. Reload the extension.');
+        const result=await globalThis.axe.run(document,{iframes:false,resultTypes:['violations','incomplete','passes']});
+        const compact=items=>items.map(({id,impact,help,description,helpUrl,nodes})=>({id,impact,help,description,helpUrl,nodes:nodes.map(({target,failureSummary})=>({target,failureSummary}))}));
+        return {url:location.origin,at:new Date().toISOString(),version:result.testEngine.version,violations:compact(result.violations),incomplete:compact(result.incomplete),passes:result.passes.length};
+      }});
+      return result.result;
+    }
     if (message.type === 'advisorEvidence') {
       const tab=await chrome.tabs.get(message.tabId);
       if(!tab.active||!/^https?:/.test(tab.url||''))throw new Error('Select the inspected HTTP/HTTPS website to collect evidence.');
@@ -306,7 +319,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'captureResponsive') return captureResponsive(message.tabId,message.widths);
     if (responsiveBusy) throw new Error('Responsive capture is in progress.');
     if (message.type === 'validateViewport') {
-      if(!Number.isInteger(message.width)||!Number.isInteger(message.height)||message.width<320||message.width>2560||message.height<320||message.height>2560)throw new Error('Invalid viewport dimensions.');
+      if(!Number.isInteger(message.width)||!Number.isInteger(message.height)||message.width<320||message.width>4096||message.height<320||message.height>4096)throw new Error('Invalid viewport dimensions.');
       const [size]=await chrome.scripting.executeScript({target:{tabId:message.tabId},func:()=>({width:innerWidth,height:innerHeight})});
       if(size.result.width!==message.width||size.result.height!==message.height)throw new Error(`Live viewport is ${size.result.width} × ${size.result.height}. Set Device Toolbar to ${message.width} × ${message.height} CSS px, then capture again.`);
       return true;

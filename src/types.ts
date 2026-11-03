@@ -1,3 +1,4 @@
+import type {KnowledgeTrace} from './knowledge';
 export type Box = { x: number; y: number; width: number; height: number };
 export type Issue = {
   id: string; title: string; category: 'missing' | 'text' | 'layout' | 'spacing' | 'style';
@@ -13,4 +14,4 @@ export type Capture = { preview?:{ownerTabId:number;tabId:number;sessionId:strin
 export type Design = { image: string; name: string; width: number; height: number };
 export type Diff = { changedPercent: number; regions: Box[] };
 export type ComparisonOptions = { tolerancePx: number; normalization: 'fit' | 'strict'; alignment?: {x:number;y:number;scale:number} };
-export type Comparison = { id: string; createdAt: string; capture: Capture; design: Design; diff: Diff; issues: Issue[]; summary: string; model: string; sourceDesign?:Design; options?: ComparisonOptions; baselineId?:string; pinned?:boolean; verification?:{previousIssue:string;outcome:'still-detected'|'not-detected';currentIssueId?:string}[]; approval?:{status:'draft'|'changes-requested'|'approved';reviewer:string;note:string;updatedAt:string} };
+export type Comparison = { knowledge?:KnowledgeTrace; id: string; createdAt: string; capture: Capture; design: Design; diff: Diff; issues: Issue[]; summary: string; model: string; sourceDesign?:Design; options?: ComparisonOptions; baselineId?:string; pinned?:boolean; verification?:{previousIssue:string;outcome:'still-detected'|'not-detected';currentIssueId?:string}[]; approval?:{status:'draft'|'changes-requested'|'approved';reviewer:string;note:string;updatedAt:string} };

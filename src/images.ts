@@ -90,5 +90,16 @@ export async function exportPdf(record: Comparison) {
     line(`Expected: ${issue.expected}`); line(`Actual: ${issue.actual}`);
     line(issue.explanation); line(`Recommendation: ${issue.recommendation}`);
   });
+  if(record.knowledge){
+    const trace=record.knowledge;pdf.addPage();y=20;line('Project Knowledge + Traceability',18);line(`Project: ${trace.project.name}; trace: ${trace.id}; comparison: ${trace.comparisonId}`);line(`Capture: ${trace.capture.capturedAt}; ${trace.capture.device}; design reference match: ${trace.referenceMatch}`);
+    for(const source of trace.sources)line(`Source ${source.id}: ${source.title} / ${source.version}; approved by ${source.approved_by} at ${source.approved_at}; SHA-256 ${source.hash}`);
+    if(!trace.checks.length)line('No approved explicit rules were evaluated. No compliance conclusion.');
+    for(const check of trace.checks){line(`${check.title}: ${check.status} / ${check.obligation}`,12);line(`Rule ${check.ruleId}; source ${check.sourceId}; expected: ${check.expected}`);line(`Observed: ${check.observed}; evidence: ${check.evidenceIds.join(', ')||'No matched sample'}`);}
+    line(`Explanation mode: ${trace.advice.mode}`);line(trace.advice.answer);
+    for(const item of trace.advice.recommendations){line(item.title,12);line(item.explanation);line(item.recommendation);line(`Source citations: ${item.sourceIds.join(', ')}; evidence: ${item.evidenceIds.join(', ')}`);}
+    for(const link of trace.visualLinks)line(`Human association (not proof): visual finding ${link.issueId} -> rule ${link.ruleId}`);
+    for(const limit of [...trace.limitations,...trace.advice.uncertainties])line(limit);
+    line('Download the JSON evidence trace for the full frozen source, rule and DOM measurement snapshots.');
+  }
   download(pdf.output('blob'), 'project-1-report.pdf');
 }

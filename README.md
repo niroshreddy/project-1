@@ -321,3 +321,101 @@ Preview mappings are Chrome-session state, separate from persistent device works
 Verification: `node --import tsx --test tests/device-preview.test.ts` checks isolation, permission boundaries, serialized capture provenance, invalid settings/URL changes and detach/reconnect. `node tests/device-preview-runtime.mjs` uses actual extension/CDP APIs with synthetic pages in an isolated Edge profile; only the test copy pre-grants permissions. It verifies phone/tablet dimensions and orientation, screenshots, per-workspace persistence, full-page restoration, original-tab isolation and disconnect/reconnect/close behavior.
 
 The layout selector has separate Desktop, Mobile and iPad buttons. Mobile lists phone presets (iPhone/Android); iPad lists tablet presets. Each category restores its last selected device/orientation and continues using the existing per-preset saved workspaces. Phone and iPad Custom workspaces are independent too.
+
+### Compact comparison setup
+
+Mobile and iPad use a compact device toolbar with preset dimensions and a Custom size action. Preview controls, zoom, and synced scrolling sit above the comparison cards; workflow and setup explanations expand on demand. The status shows which workspace is saved locally. When the local service is offline, the comparison bar offers Start service and Use browser-only. Existing per-device and orientation workspaces are retained.
+
+### Desktop, Phone, Tablet, and TV
+
+Phone and Tablet retain their existing saved device/orientation workspaces (including all iPhone, Android phone, and iPad presets). TV adds Full HD (1920 x 1080), 4K (3840 x 2160), and custom CSS viewport presets, defaulting to landscape. Each TV preset/orientation saves its own reference, capture, comparison settings, and results across browser restarts. TV frames appear in Compare and all Results modes, and are excluded from analysis and exports. Automatic TV preview uses desktop layout without touch emulation. This is Chrome responsive viewport testing, not emulation of a particular smart TV browser or remote control. Existing capture size limits still apply.
+
+Device preview shells follow the selected model family: notched iPhones, Dynamic Island iPhones, Pixel/Galaxy camera holes, and iPad bezels, including landscape rotation. These are illustrative CSS frames, not dimensionally exact hardware replicas. Both reference and live previews (including Results) use the same shell; camera decorations stay outside image content and never enter comparison data or exports.
+
+### Device-family frame appearance
+
+Samsung, LG, and Sony TV Full HD/4K presets each have separate saved workspaces. Their decorative shells use distinct pedestal/foot designs and bezel labels. Existing generic TV preset IDs are retained. Phone frames include family-specific corner/bezel treatments, camera cutouts, side controls, and rotated landscape details; iPad Mini and Pro use different bezel/camera placement. The same renderer is used in Compare, annotated Results, overlay, and difference views. Shells and stands never enter analysis or exports. TV branding is illustrative: no exact TV model, physical size, or vendor browser is claimed. Named phone/tablet frames are approximations rather than measured hardware replicas.
+
+Design references: [Apple iPhone 15 Pro](https://support.apple.com/en-us/111829), [Sony BRAVIA design](https://www.sony.com/en/SonyInfo/design/stories/HarmonicPresence/), [LG OLED design](https://www.lg.com/levant_en/why-lgoled/design), [Samsung TV design](https://image-us.samsung.com/SamsungUS/samsung/us/tvs/QN9DASpecSheet_2.4.21.pdf).
+
+Comparison input actions now appear above their previews. Empty device shells use a compact size; loaded images retain zoom and scrolling. Live preview, zoom, and sync share a toolbar. Capture viewport mismatch guidance shows selected/current CSS sizes and offers a matching preview for device modes. Comparison settings use Image scaling and Difference sensitivity labels, with alignment and baseline controls under Advanced settings; existing stored setting names and values are unchanged.
+
+### Local phone and iPad PNG mockups
+
+Phone/tablet Compare and Results now use bundled transparent PNG device mockup images instead of CSS-drawn hardware. Both portrait and landscape assets include screen-opening coordinates; screenshot/canvas content remains independently scrollable and zoomable below the artwork. Raw captures, comparisons, PNG/PDF exports, and saved workspaces are unchanged. TV rendering is unchanged.
+
+Assets: [MockUPhone attribution](https://mockuphone.com/attribution/), pinned source revision `7e570f420ad91d895df926214c206d0833fb53a5`. Local `public/device-mockups/manifest.json` lists per-image source and contributor credits; notices are bundled and linked in How it works. Exact artwork is available for iPhone 14 Pro/Pro Max, iPhone 15/Pro/Pro Max, Pixel 7/8, Galaxy S20 Ultra, and iPad Pro 13. Other named, generic, and custom presets use explicitly labeled related-device artwork; their viewport dimensions and stored IDs are never substituted. The iPad Mini image is also labeled related because its hardware generation differs from the existing DevTools viewport preset. No runtime connection to the artwork provider is used. All 24 PNGs have transparent screen openings validated against their placement metadata.
+
+### Neutral surfaces and keyboard focus
+
+The light theme uses a neutral gray workspace (#F5F7F9), white cards, neutral preview wells, the existing dark teal header, and stronger teal actions (#176B78). Shared text/control/status token pairs were checked against 4.5:1 text and 3:1 control/focus contrast targets; primary button text is 6.16:1, muted text on white is 6.38:1, and input borders on white are 3.68:1. Keyboard focus uses a white inset ring in the header and contrasting rings on content controls in light/dark themes. These targeted checks are not a full accessibility audit. No saved workspace schema or screenshot colors were changed.
+
+## Project Knowledge + Traceability — local pilot
+
+Open **Knowledge** in project-1 after restarting the Python backend and reloading the extension. This opt-in workspace leaves existing comparison routes, per-device IndexedDB drafts, and history stores unchanged. A `knowledge` field is added only when you explicitly evaluate a saved comparison.
+
+1. Create a local project. Upload or paste company guidelines as TXT/Markdown (100,000 characters max). Add a source title and immutable version such as `v1`.
+2. Upload an approved Figma PNG/JPG export (8 MB max) or structured Figma JSON export (500,000 characters max). Native `.fig` files, Figma OAuth/API access, and automatic design-token/component matching are not part of this pilot. Image inputs retain existing 24 MP / 12,000px limits.
+3. Review the full source preview/download, enter an approver name, and explicitly approve each source version. Draft sources are excluded from validation and retrieval. The local approver label is not authenticated enterprise sign-off. Approved versions cannot be overwritten; corrections require a new version.
+4. Select an approved guideline version and create explicit rules. Supported checks: exact sampled text presence, minimum computed font size, exact opaque text color, minimum sampled native-control dimensions, and manual guidance. Mark each as mandatory or optional. Rules are human-authored and explicitly approved, not silently extracted or adopted by AI.
+5. Optionally **Use … as reference** on an approved Figma image. It replaces the reference in the device workspace that initiated that action; capture and compare normally. Existing references in other device workspaces are untouched.
+6. Open Knowledge with your current comparison (or one opened from History). Select the approved guideline and Figma versions, review the evidence, and run **Validate explicit rules**. Matching uses exact bounded DOM text labels, not CSS selectors or Figma component identity. Missing samples are **needs-review/not-checked**, never proof of absence. **Observed** is a sampled measurement, not a compliance or release pass. Uploaded capture images without DOM evidence cannot support these measured checks.
+7. The report freezes project/source versions, SHA-256 source/reference hashes, approver names, explicit rules, evidence IDs and measurements, capture URL/time/device/size, and uncertainties. Figma image correspondence is checked against the original comparison reference bytes; mismatches and JSON-only sources are explicitly labeled. Reports remain attached in Results, local History, per-device saved results, JSON evidence exports, and PDF reports. Human visual-finding-to-rule links are labeled associations, not measured violations.
+8. **Check local AI**, choose an installed local Ollama model, and explicitly enable it to ask for an explanation. Retrieval ranks bounded text chunks from only the two selected approved source versions. Every model recommendation must cite valid source and captured evidence IDs; invalid citations, remote-backed models, and external model endpoints are rejected. Source/page text is treated as untrusted data. AI output is a review hypothesis and never changes the website or approves policy. PNG export contents are not interpreted by a vision model. This pilot uses lexical retrieval, not embeddings or a full Figma knowledge graph.
+
+No model is installed automatically. Actual local-model inference remains dependent on your Ollama installation; tests simulate local responses and verify citations, remote rejection, and failure behavior. Existing Ask this page and Journey Agent remain available independently.
+
+Explicitly imported sources (including design images) and approved rules persist in the separate SQLite database `data/knowledge.sqlite3`. Override with `PROJECT_KNOWLEDGE_DB` if needed. Back up that database separately from Chrome storage. It is local, not encrypted, and not an enterprise identity/permission system. The backend's existing extension-origin/loopback boundary protects these routes. Source imports/evaluation do not contact Team or external services; choosing **Save current review to team** also shares the attached trace and source text with your configured Team server. Team serialization retains the optional typed trace. Automatic deletion, revocation, connector sync, multi-project retrieval, and policy conflict resolution are deferred; select source versions explicitly and rerun after changes.
+
+Verification:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest backend/test_knowledge.py -q
+node tests/knowledge-ui.mjs
+```
+
+The browser test starts its own loopback Python service on port 8798, uses temporary test databases/profiles under ignored `artifacts`, and does not control your open Chrome or restart your existing backend.
+
+## Evidence overview dashboard
+
+Open **Overview** for an enterprise-style dashboard using the existing teal/neutral palette. On windows at least 1600 CSS px wide, a sidebar exposes existing workspaces; narrower/docked DevTools retain the compact navigation. Compare remains the initial screen. No reference, capture, settings, or storage-key migration is performed by opening the dashboard.
+
+The dashboard displays real selected-comparison findings, a side-by-side annotated preview, overlay/difference modes, severity filters and finding navigation, PDF export, saved Knowledge explanations and rule-check coverage, human review status, and links to Ask this page, Knowledge, checkout Journey Agent, History, and Team. A comparison chooser reads history and saved device results. Workspace-wide device counts distinguish prepared references/captures from saved results; neither is a pass or real-device certification. Source-less/unevaluated states are shown explicitly. Pixel-change percentages are never converted into a design-match or release-readiness score, and component counts are not invented.
+
+Figma-to-code component mapping, Jira requirements ingestion, Sanity content validation, repository change-impact analysis, and release-wide aggregation remain clearly labeled roadmap gaps. This dashboard connects existing features; it does not pretend those integrations are implemented.
+
+## Streamlined Compare, Advisor, and Journey flows
+
+The header indicator now explicitly describes **Comparison**, not all backend capabilities. Ask and Journey show independent Comparison / Advisor-or-Journey / Browser runner / Local AI states where relevant. A responding rules service without a model is distinguished from a failed endpoint. Status checks have bounded timeouts, stop displaying Checking after failure, and refresh when returning to a workspace. Access-denied (403), missing updated endpoints (404), unavailable services, and missing local models have different guidance. Missing service status never implies the browser or AI has been checked successfully.
+
+Compare has one desktop upload target, a compact empty capture preview, and initially collapsed comparison settings showing the current image-scaling and tolerance values. Values still use the existing per-device storage. Phone/Tablet/TV mockups, captures, modes, exports, and all existing settings remain available.
+
+Ask has Accessibility / Responsive layout / Form usability / Company guidelines question shortcuts, naturally sized evidence cards, collapsible optional product context, a link to approved Knowledge, and an explicit action-readiness explanation. Built-in checks remain question-independent; shortcuts do not simulate local AI answers. Evidence review and consent remain required.
+
+Journey uses four steps: Choose page, Configure task, Run checks, and Review evidence. Advanced selectors and synthetic values expand in configuration; network boundaries, optional local planning, repetitions, viewports, staging confirmation, discovery, cancellation, history, evidence export, and fix verification are retained. Changing steps does not recreate or clear the task contract. Active-run cancellation remains visible outside the steps. No local model is installed automatically.
+# Local accessibility and unified service status
+
+The header **Services** menu lists comparison, advisor, Journey, browser runner,
+and local AI status independently. **Check all services** retries their connections;
+setup instructions remain in the same menu. Optional AI setup does not block
+browser-only comparison or accessibility checks.
+
+Open **Accessibility → Run accessibility checks** to scan the inspected HTTP/HTTPS
+page with bundled axe-core 4.11.0. The scan runs in Chrome's isolated script world;
+it needs website permission but no Python, AI, or network service. Supported shadow
+DOM is checked; embedded frames and other page states require separate checks.
+Violations and incomplete/manual-review results stay separate from visual findings.
+Evidence includes selectors and remediation text, without collecting element HTML or
+input values. Selectors can still contain sensitive identifiers: review before exporting.
+Scan triage is session-only, survives navigation between tool tabs, and is included in
+the downloadable JSON report. Refreshing the scan starts a new review.
+
+Overview now supports accepting/dismissing and reopening visual findings directly.
+These use the existing accepted-difference status, reset human approval to draft,
+and save to history and matching device workspaces. **Show reviewed** restores
+reviewed findings to the list. Results also exposes quick Accept deviation/Reopen
+actions alongside existing detailed review and dismissal controls.
+
+Automated accessibility checks do not establish complete WCAG compliance. The
+vendored engine is unmodified; license and pinned distribution integrity are in
+`public/vendor/axe-LICENSE.txt` and `public/vendor/axe-NOTICE.txt`.

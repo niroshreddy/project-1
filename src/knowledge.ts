@@ -1,0 +1,13 @@
+import {API} from './api';
+import type {Comparison} from './types';
+export type KnowledgeSource={id:string;project:string;title:string;version:string;kind:'guideline'|'figma';hash:string;approved_by:string|null;approved_at:string|null;created:string;content:string;image:string;hasImage:boolean};
+export type KnowledgeRule={id:string;sourceId:string;sourceVersion:string;title:string;expectation:string;obligation:'mandatory'|'recommendation';kind:string;target:string;value:string;approvedBy:string;approvedAt:string};
+export type KnowledgeProject={id:string;name:string;created:string;sources:KnowledgeSource[];rules:KnowledgeRule[]};
+export type KnowledgeTrace={schemaVersion:1;id:string;createdAt:string;project:{id:string;name:string;created:string};sources:KnowledgeSource[];rules:KnowledgeRule[];checks:{id:string;ruleId:string;sourceId:string;title:string;obligation:string;status:string;expected:string;observed:string;evidenceIds:string[]}[];advice:{mode:string;model?:string;answer:string;recommendations:{title:string;explanation:string;recommendation:string;sourceIds:string[];evidenceIds:string[]}[];uncertainties:string[]};referenceMatch:string;referenceHash:string;comparisonId:string;capture:{page:string;capturedAt:string;width:number;height:number;device:string};evidence:{id:string;tag:string;text:string;fontSize:string;color:string;width:number;height:number}[];visualLinks:{issueId:string;ruleId:string;linkedAt:string}[];limitations:string[]};
+export async function knowledgeRequest<T>(path:string,body?:unknown,signal?:AbortSignal):Promise<T>{
+ const response=await fetch(API+'/knowledge'+path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:undefined,body:body?JSON.stringify(body):undefined,signal});
+ let data;try{data=await response.json();}catch{throw Error('Project Knowledge service returned an unreadable response. Restart the Python backend.');}
+ if(!response.ok)throw Error(typeof data.detail==='string'?data.detail:'Project Knowledge request rejected. Check the input and restart the Python backend.');return data;
+}
+export function knowledgeEvidence(record:Comparison){return record.capture.snapshot.elements.map((element,index)=>({id:`e${index+1}`,tag:element.tag,text:element.text,fontSize:element.fontSize,color:element.color,width:element.box.width*record.capture.snapshot.width,height:element.box.height*record.capture.snapshot.height}));}
+export function downloadTrace(trace:KnowledgeTrace){const url=URL.createObjectURL(new Blob([JSON.stringify(trace,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='project-1-knowledge-trace.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}

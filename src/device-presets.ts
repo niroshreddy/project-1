@@ -22,6 +22,10 @@ export const MOBILE_PRESETS:MobilePreset[]=[
  {id:'pixel-9-pro',name:'Google Pixel 9 Pro',group:'Android',width:427,height:952},
  {id:'galaxy-s20-ultra',name:'Samsung Galaxy S20 Ultra',group:'Android',width:412,height:915},
  ...([['360x800','Small phone',360,800],['390x844','Phone',390,844],['412x915','Large phone',412,915],['768x1024','iPad viewport',768,1024],['820x1180','iPad viewport',820,1180],['834x1194','iPad viewport',834,1194],['1024x1366','iPad viewport',1024,1366]] as const).map(([id,name,width,height])=>({id,name,width,height,group:'Generic / existing'})),
+ ...(['Samsung','LG','Sony'] as const).flatMap(brand=>([{id:`tv-${brand.toLowerCase()}-1080p`,name:`${brand} TV Full HD`,group:'TV',width:1080,height:1920},{id:`tv-${brand.toLowerCase()}-4k`,name:`${brand} TV 4K`,group:'TV',width:2160,height:3840}])),
+ {id:'tv-1080p',name:'TV Full HD',group:'TV',width:1080,height:1920},
+ {id:'tv-4k',name:'TV 4K',group:'TV',width:2160,height:3840},
+ {id:'custom-tv',name:'Custom TV',group:'TV',width:1080,height:1920},
  {id:'custom-ipad',name:'Custom iPad dimensions',group:'Custom',width:820,height:1180},
  {id:'custom',name:'Custom dimensions',group:'Custom',width:390,height:844}
 ];
@@ -29,4 +33,18 @@ export function mobilePreset(id:string){return MOBILE_PRESETS.find(p=>p.id===id)
 export function mobileScope(selection:MobileSelection){return `mobile:${selection.presetId}:${selection.orientation}`;}
 export function mobileDimensions(selection:MobileSelection){const p=mobilePreset(selection.presetId)??mobilePreset('custom')!;return selection.orientation==='landscape'?{width:p.height,height:p.width}:{width:p.width,height:p.height};}
 
-export function isIpadPreset(id:string){const preset=mobilePreset(id);return !!preset&&(preset.group==='iPad'||Math.min(preset.width,preset.height)>=600);}
+export function isIpadPreset(id:string){const preset=mobilePreset(id);return !isTvPreset(id)&&!!preset&&(preset.group==='iPad'||Math.min(preset.width,preset.height)>=600);}
+
+export function isTvPreset(id:string){return mobilePreset(id)?.group==='TV';}
+export function deviceCategory(id:string){return isTvPreset(id)?'tv':isIpadPreset(id)?'ipad':'phone';}
+
+// Decorative shells only: viewport geometry remains defined by the selected preset.
+export function deviceFrameStyle(id:string){
+ if(isTvPreset(id))return id.startsWith('tv-samsung-')?'tv-samsung':id.startsWith('tv-lg-')?'tv-lg':id.startsWith('tv-sony-')?'tv-sony':'tv';
+ if(isIpadPreset(id))return id==='ipad-pro-13'?'ipad-pro':'ipad';
+ if(id==='iphone-12-pro'||id==='iphone-16e')return 'iphone-notch';
+ if(id.startsWith('iphone-'))return 'iphone-island';
+ if(id.startsWith('pixel-'))return 'pixel';
+ if(id.startsWith('galaxy-'))return 'galaxy';
+ return 'generic';
+}

@@ -338,3 +338,71 @@ button:focus-visible,input:focus-visible,select:focus-visible,.dropzone:focus-wi
 .device-controls .workspace-save-status{flex-basis:auto;margin-left:auto;font-size:11px;color:var(--muted)}@media(max-height:600px){.device-controls .workspace-save-status{font-size:10px}}
 
 .device-preview-controls{margin:0 0 12px;padding:12px 14px;font-size:12px}.device-preview-controls p{margin:4px 0 8px;overflow-wrap:anywhere}.device-preview-controls small{display:block;color:var(--muted);margin-top:8px}.preview-buttons{display:flex;gap:8px;flex-wrap:wrap}.device-preview-controls [role=alert]{color:var(--highlight-text)}
+
+/* Compact comparison setup; all colors continue to come from the existing palette. */
+.device-controls{gap:8px 12px;padding:10px 14px;margin-bottom:8px}
+.device-controls>label{font-size:11px}.device-controls select{max-width:250px}
+.device-controls .device-mode button,.device-controls .orientation-toggle button{min-height:30px;padding:5px 10px;font-size:12px}
+.viewport-dimensions{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);white-space:nowrap}
+.viewport-dimensions button{padding:3px 6px;min-height:26px;font-size:10px}
+.device-controls .device-guidance{margin-left:0;font-size:11px}
+.device-controls .workspace-save-status{margin-left:auto;font-size:11px;flex-basis:auto;white-space:normal}
+.workflow-help{margin:0 0 8px;font-size:11px;color:var(--muted)}.workflow-help>summary{cursor:pointer}.workflow-help[open]{padding:8px 0}.workflow-help .workflow-steps{margin:10px 0 0}
+.device-preview-controls{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 12px;margin-bottom:6px}
+.device-preview-controls>div:first-child{flex:0 0 auto}.device-preview-controls .preview-buttons{gap:6px}.device-preview-controls button{min-height:30px;padding:5px 9px;font-size:11px}
+.device-preview-controls>[role=status]{margin:0;flex:1;min-width:120px;max-width:100%;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;font-size:11px}
+.device-preview-controls>[role=alert]{flex-basis:100%;margin:4px 0;white-space:normal}
+.preview-help{margin-left:auto;font-size:11px}.preview-help>summary{cursor:pointer;color:var(--muted)}.preview-help[open]{flex-basis:100%;margin:4px 0}.preview-help small{margin-top:6px}
+.phone-preview-toolbar{padding:5px 0 8px;margin:0;gap:8px 18px;border-bottom:1px solid var(--border);font-size:11px}
+.phone-preview-toolbar select{min-height:28px;padding:4px 7px}.phone-preview-toolbar details{margin-left:auto}.phone-preview-toolbar summary{cursor:pointer;color:var(--muted)}.phone-preview-toolbar details[open]{flex-basis:100%;margin-left:0}.phone-preview-toolbar p{margin-top:6px}
+.inputs{margin-top:8px}.inputs>.card{padding:14px}.inputs .section-title{margin-bottom:10px}.inputs .empty-preview{height:140px}
+@media(max-height:600px){.device-controls{padding:6px 8px;gap:6px 8px}.inputs>.card{padding:10px}.inputs .empty-preview{height:64px}.workflow-help{margin-bottom:6px}.device-preview-controls{padding:6px 8px}}
+@media(max-width:650px){.device-controls select{max-width:100%}.device-controls>label{min-width:0;max-width:100%}.device-controls .workspace-save-status{flex-basis:100%;margin-left:0}.device-preview-controls .preview-buttons{flex-wrap:wrap}.preview-help{margin-left:0}.phone-preview-toolbar{gap:8px 12px}.phone-preview-toolbar details{margin-left:0}.inputs .empty-preview{height:110px}.action-inner{flex-wrap:wrap}.action-readiness{flex-basis:100%}.action-buttons{width:100%;flex-wrap:wrap;justify-content:flex-end}.action-buttons .primary{flex:1;min-width:130px}}
+
+/* Collapsible settings retain their mounted controls and saved values. */
+.comparison-parameters{display:block;padding:0;overflow:hidden}.comparison-parameters .parameters-heading{width:100%;margin:0;border:0;border-radius:0;background:transparent;color:inherit;text-align:left;cursor:pointer;min-height:48px;padding:14px 20px;display:flex;align-items:center;gap:18px}.parameters-heading .settings-chevron{margin-left:auto;font-size:20px;line-height:1}.parameters-heading:focus-visible{outline:2px solid var(--teal);outline-offset:-3px}.parameters-content{display:flex;flex-wrap:wrap;align-items:center;gap:18px 35px;padding:16px 22px 18px;border-top:1px solid var(--border)}.parameters-content[hidden]{display:none}@media(max-width:520px){.comparison-parameters .parameters-heading{flex-direction:row;flex-wrap:wrap;gap:6px;padding:12px}.parameters-heading>span:not(.settings-chevron){display:none}.parameters-content{padding:12px;gap:14px}}
+
+/* Keep primary input actions above previews, including loaded and tall devices. */
+.inputs>.card{display:flex;flex-direction:column;gap:8px}.inputs>.card>*{order:2}.inputs>.card>.section-title{order:0;margin-bottom:2px}.inputs>.card>.upload-action,.inputs>.card>.capture-action{order:1;margin:0}.inputs .upload-action{padding:8px 12px;gap:8px;min-height:0}.inputs .upload-action small{margin:0}.inputs .source-action{min-height:34px;padding:7px 12px}.inputs .capture-caption{margin:2px 0}.inputs .capture-controls{padding-top:2px}
+.inputs .empty-device{padding:8px}.inputs .empty-device .phone-frame:not(.tv-frame){width:min(100%,240px,calc(24vh * var(--phone-ratio)));min-width:65px}.inputs .empty-device .phone-empty{font-size:10px;padding:10px;gap:6px}.inputs .empty-device .phone-empty svg{width:20px;height:20px}.inputs .empty-device .tv-frame{width:min(100%,480px,calc(23vh * var(--phone-ratio)))}
+.device-preview-controls .phone-preview-toolbar{border:0;padding:0;margin:0 0 0 auto;font-size:11px;gap:8px 12px}.device-preview-controls .phone-preview-toolbar details{display:none}.device-preview-controls .phone-preview-toolbar label{white-space:nowrap}.preview-help{margin-left:0}.advanced-comparison{flex-basis:100%;font-size:12px}.advanced-comparison>summary{cursor:pointer;font-weight:600}.advanced-comparison-content{display:flex;gap:12px;flex-wrap:wrap;padding-top:10px}
+.viewport-mismatch{display:flex;align-items:center;gap:12px;padding:10px 14px;margin-bottom:8px;border-left:3px solid var(--teal);font-size:12px}.viewport-mismatch div{flex:1}.viewport-mismatch p{margin:4px 0}.viewport-mismatch small{color:var(--muted)}.viewport-mismatch button{min-height:30px;padding:6px 10px}.viewport-mismatch>button:last-child{padding:4px 8px}
+@media(max-height:650px){.inputs .empty-device .phone-frame:not(.tv-frame){width:min(100%,calc(17vh * var(--phone-ratio)));min-width:45px}.inputs .empty-device .phone-empty{font-size:8px;padding:5px}.inputs .empty-device .phone-empty svg{display:none}.device-preview-controls{gap:5px 8px}.inputs>.card{padding:10px;gap:5px}.inputs .upload-action>span,.inputs .upload-action small{display:none}}
+@media(max-width:650px){.device-preview-controls .phone-preview-toolbar{margin-left:0;flex-wrap:wrap}.viewport-mismatch{flex-wrap:wrap}.viewport-mismatch div{flex-basis:100%}.inputs .upload-action{flex-wrap:wrap}}
+
+@media(min-width:651px){.inputs:has(.phone-stage) .upload-action{height:36px;min-height:36px;flex-wrap:nowrap;padding:3px 8px;gap:8px}.inputs:has(.phone-stage) .upload-action small{flex-basis:auto;font-size:10px}.inputs:has(.phone-stage) .upload-action>span{display:none}.inputs:has(.phone-stage) .capture-action{height:36px;min-height:36px}}
+
+.inputs .empty-device .phone-frame:not(.tv-frame){width:min(100%,240px,calc(32vh * var(--phone-ratio)));min-width:75px}.inputs .empty-device .phone-empty{padding:0;gap:0}.inputs .empty-device .phone-empty strong{display:none}
+@media(min-width:651px){.inputs:has(.phone-stage) .upload-action{box-sizing:border-box;max-height:36px;overflow:hidden}.inputs:has(.phone-stage) .upload-action small{display:none}.inputs:has(.phone-stage) .upload-action .source-action{min-height:28px;padding:3px 14px}.inputs:has(.phone-stage) .upload-action{border-style:solid}}
+@media(max-height:650px){.inputs .empty-device .phone-frame:not(.tv-frame){width:min(100%,calc(24vh * var(--phone-ratio)));min-width:50px}}
+
+/* A single desktop upload target; populated references retain Replace reference. */
+.upload-action[hidden]{display:none!important}.inputs .dropzone.empty-preview{height:180px;gap:8px;padding:14px;justify-content:center;align-items:center}.inputs .dropzone.empty-preview strong{font-size:13px}.inputs .dropzone.empty-preview small{color:var(--muted);font-size:11px}.inputs .dropzone.empty-preview .preview-icon{display:none}.inputs .dropzone.empty-preview .source-action{min-height:32px;padding:6px 20px}.inputs .capture-preview.empty-preview{height:120px}.parameters-heading>span:not(.settings-chevron){overflow-wrap:anywhere}
+@media(max-height:600px){.inputs .dropzone.empty-preview{height:100px;gap:4px;padding:7px}.inputs .dropzone.empty-preview strong{font-size:11px}.inputs .dropzone.empty-preview small{font-size:10px}.inputs .capture-preview.empty-preview{height:64px}}
+
+.inputs .dropzone.empty-preview .source-action{width:auto;min-width:150px;align-self:center;background:var(--teal);border-color:var(--teal);color:#fff}.inputs .dropzone.empty-preview .source-action:hover{background:var(--teal-hover)}
+
+/* Shared device-preview rows keep actions, hardware and footers aligned. */
+.inputs:has(.phone-stage) .upload-action{height:36px;min-height:36px;max-height:none;padding:0;border:0;background:transparent;overflow:visible}
+.inputs:has(.phone-stage) .upload-action .source-action,.inputs:has(.phone-stage) .capture-action{height:36px;min-height:36px;padding-block:6px;margin:0}
+.inputs .phone-stage:has(.tv-frame){padding:12px 16px 46px}
+.reference-caption{font-size:11px;color:var(--muted);text-align:center;margin:2px 0;overflow-wrap:anywhere}
+.device-controls{align-items:center;gap:10px 16px}
+.device-controls>label{display:flex;align-items:center;gap:10px;min-width:0}
+.device-controls .orientation-toggle{padding-left:12px;border-left:1px solid var(--border)}
+.device-controls .workspace-save-status{flex:1 1 180px;text-align:right}
+.compare-workspace>main{padding-bottom:36px;scroll-padding-block:16px 36px}
+.compare-workspace .comparison-parameters,.compare-workspace .responsive-suite{scroll-margin-block:16px}
+@media(min-width:651px){
+ .inputs:has(.phone-stage){grid-template-rows:auto 36px auto auto auto auto;row-gap:10px}
+ .inputs:has(.phone-stage)>.card{display:grid;grid-row:span 6;grid-template-rows:subgrid;align-content:start}
+ .inputs:has(.phone-stage)>.card>*{order:0;min-width:0}
+ .inputs:has(.phone-stage) .section-title{grid-row:1}
+ .inputs:has(.phone-stage) .upload-action,.inputs:has(.phone-stage) .capture-action{grid-row:2}
+ .inputs:has(.phone-stage) .reference-device-preview,.inputs:has(.phone-stage)>.card>.phone-stage{grid-row:3;align-self:stretch}
+ .reference-device-preview>.phone-stage{height:100%}
+ .inputs:has(.phone-stage) .source-details{grid-row:4;align-self:start}
+ .inputs:has(.phone-stage) .reference-caption,.inputs:has(.phone-stage) .capture-caption{grid-row:5;align-self:start}
+ .inputs:has(.phone-stage) .pdf-picker,.inputs:has(.phone-stage) .capture-controls{grid-row:6;align-self:start;margin:0}
+}
+@media(max-width:650px){.device-controls .workspace-save-status{flex-basis:100%;text-align:left}.device-controls .orientation-toggle{padding-left:0;border-left:0}.compare-workspace>main{padding-bottom:24px}}

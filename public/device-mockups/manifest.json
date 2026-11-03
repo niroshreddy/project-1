@@ -1,0 +1,314 @@
+{
+  "apple-ipadair5-spacegrey": {
+    "portrait": {
+      "file": "apple-ipadair5-spacegrey-portrait.png",
+      "width": 1920,
+      "height": 2640,
+      "x": 140,
+      "y": 139,
+      "screenWidth": 1641,
+      "screenHeight": 2361,
+      "name": "iPad Air 5",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/apple-ipadair5-spacegrey-portrait.png",
+      "credits": "<p><a href=\"https://developer.apple.com/design/resources/\" target=\"blank\">Apple Design Resources</a></p>"
+    },
+    "landscape": {
+      "file": "apple-ipadair5-spacegrey-landscape.png",
+      "width": 2640,
+      "height": 1920,
+      "x": 139,
+      "y": 140,
+      "screenWidth": 2361,
+      "screenHeight": 1641,
+      "name": "iPad Air 5",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/apple-ipadair5-spacegrey-landscape.png",
+      "credits": "<p><a href=\"https://developer.apple.com/design/resources/\" target=\"blank\">Apple Design Resources</a></p>"
+    }
+  },
+  "apple-ipadmini-starlight": {
+    "portrait": {
+      "file": "apple-ipadmini-starlight-portrait.png",
+      "width": 1780,
+      "height": 2550,
+      "x": 145,
+      "y": 141,
+      "screenWidth": 1488,
+      "screenHeight": 2266,
+      "name": "iPad mini",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/apple-ipadmini-starlight-portrait.png",
+      "credits": "<p><a href=\"https://developer.apple.com/design/resources/\" target=\"blank\">Apple Design Resources</a></p>"
+    },
+    "landscape": {
+      "file": "apple-ipadmini-starlight-landscape.png",
+      "width": 2550,
+      "height": 1780,
+      "x": 141,
+      "y": 145,
+      "screenWidth": 2266,
+      "screenHeight": 1488,
+      "name": "iPad mini",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/apple-ipadmini-starlight-landscape.png",
+      "credits": "<p><a href=\"https://developer.apple.com/design/resources/\" target=\"blank\">Apple Design Resources</a></p>"
+    }
+  },
+  "apple-ipadpro13-spacegrey": {
+    "portrait": {
+      "file": "apple-ipadpro13-spacegrey-portrait.png",
+      "width": 2290,
+      "height": 2960,
+      "x": 120,
+      "y": 113,
+      "screenWidth": 2048,
+      "screenHeight": 2732,
+      "name": "iPad Pro 12.9-inch",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/apple-ipadpro13-spacegrey-portrait.png",
+      "credits": "<p><a href=\"https://developer.apple.com/design/resources/\" target=\"blank\">Apple Design Resources</a></p>"
+    },
+    "landscape": {
+      "file": "apple-ipadpro13-spacegrey-landscape.png",
+      "width": 2960,
+      "height": 2290,
+      "x": 113,
+      "y": 120,
+      "screenWidth": 2732,
+      "screenHeight": 2048,
+      "name": "iPad Pro 12.9-inch",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/apple-ipadpro13-spacegrey-landscape.png",
+      "credits": "<p><a href=\"https://developer.apple.com/design/resources/\" target=\"blank\">Apple Design Resources</a></p>"
+    }
+  },
+  "apple-iphone-15-black": {
+    "portrait": {
+      "file": "apple-iphone-15-black-portrait.png",
+      "width": 1419,
+      "height": 2796,
+      "x": 120,
+      "y": 120,
+      "screenWidth": 1179,
+      "screenHeight": 2556,
+      "name": "iPhone 15",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/apple-iphone-15-black-portrait.png",
+      "credits": "<p><a href=\"https://developer.apple.com/design/resources/\" target=\"blank\">Apple Design Resources</a></p>"
+    },
+    "landscape": {
+      "file": "apple-iphone-15-black-landscape.png",
+      "width": 2796,
+      "height": 1419,
+      "x": 120,
+      "y": 120,
+      "screenWidth": 2556,
+      "screenHeight": 1179,
+      "name": "iPhone 15",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/apple-iphone-15-black-landscape.png",
+      "credits": "<p><a href=\"https://developer.apple.com/design/resources/\" target=\"blank\">Apple Design Resources</a></p>"
+    }
+  },
+  "apple-iphone-15-pro-max-natural-titanium": {
+    "portrait": {
+      "file": "apple-iphone-15-pro-max-natural-titanium-portrait.png",
+      "width": 1530,
+      "height": 3036,
+      "x": 120,
+      "y": 120,
+      "screenWidth": 1290,
+      "screenHeight": 2796,
+      "name": "iPhone 15 Pro Max",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/apple-iphone-15-pro-max-natural-titanium-portrait.png",
+      "credits": "<p><a href=\"https://developer.apple.com/design/resources/\" target=\"blank\">Apple Design Resources</a></p>"
+    },
+    "landscape": {
+      "file": "apple-iphone-15-pro-max-natural-titanium-landscape.png",
+      "width": 3036,
+      "height": 1530,
+      "x": 120,
+      "y": 120,
+      "screenWidth": 2796,
+      "screenHeight": 1290,
+      "name": "iPhone 15 Pro Max",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/apple-iphone-15-pro-max-natural-titanium-landscape.png",
+      "credits": "<p><a href=\"https://developer.apple.com/design/resources/\" target=\"blank\">Apple Design Resources</a></p>"
+    }
+  },
+  "apple-iphone-15-pro-natural-titanium": {
+    "portrait": {
+      "file": "apple-iphone-15-pro-natural-titanium-portrait.png",
+      "width": 1419,
+      "height": 2796,
+      "x": 120,
+      "y": 120,
+      "screenWidth": 1179,
+      "screenHeight": 2556,
+      "name": "iPhone 15 Pro",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/apple-iphone-15-pro-natural-titanium-portrait.png",
+      "credits": "<p><a href=\"https://developer.apple.com/design/resources/\" target=\"blank\">Apple Design Resources</a></p>"
+    },
+    "landscape": {
+      "file": "apple-iphone-15-pro-natural-titanium-landscape.png",
+      "width": 2796,
+      "height": 1419,
+      "x": 120,
+      "y": 120,
+      "screenWidth": 2556,
+      "screenHeight": 1179,
+      "name": "iPhone 15 Pro",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/apple-iphone-15-pro-natural-titanium-landscape.png",
+      "credits": "<p><a href=\"https://developer.apple.com/design/resources/\" target=\"blank\">Apple Design Resources</a></p>"
+    }
+  },
+  "apple-iphone13pro-graphite": {
+    "portrait": {
+      "file": "apple-iphone13pro-graphite-portrait.png",
+      "width": 1570,
+      "height": 2932,
+      "x": 198,
+      "y": 198,
+      "screenWidth": 1172,
+      "screenHeight": 2536,
+      "name": "iPhone 13 pro",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/apple-iphone13pro-graphite-portrait.png",
+      "credits": "<p><a href=\"https://design.facebook.com/toolsandresources/devices/\" target=\"blank\">Meta - Design Resources</a></p>"
+    },
+    "landscape": {
+      "file": "apple-iphone13pro-graphite-landscape.png",
+      "width": 2932,
+      "height": 1570,
+      "x": 198,
+      "y": 198,
+      "screenWidth": 2533,
+      "screenHeight": 1172,
+      "name": "iPhone 13 pro",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/apple-iphone13pro-graphite-landscape.png",
+      "credits": "<p><a href=\"https://design.facebook.com/toolsandresources/devices/\" target=\"blank\">Meta - Design Resources</a></p>"
+    }
+  },
+  "apple-iphone14pro-spaceblack": {
+    "portrait": {
+      "file": "apple-iphone14pro-spaceblack-portrait.png",
+      "width": 1339,
+      "height": 2716,
+      "x": 78,
+      "y": 78,
+      "screenWidth": 1183,
+      "screenHeight": 2560,
+      "name": "iPhone 14 pro",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/apple-iphone14pro-spaceblack-portrait.png",
+      "credits": "<p><a href=\"https://developer.apple.com/design/resources/\" target=\"blank\">Apple Design Resources</a></p>"
+    },
+    "landscape": {
+      "file": "apple-iphone14pro-spaceblack-landscape.png",
+      "width": 2716,
+      "height": 1339,
+      "x": 79,
+      "y": 79,
+      "screenWidth": 2559,
+      "screenHeight": 1183,
+      "name": "iPhone 14 pro",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/apple-iphone14pro-spaceblack-landscape.png",
+      "credits": "<p><a href=\"https://developer.apple.com/design/resources/\" target=\"blank\">Apple Design Resources</a></p>"
+    }
+  },
+  "apple-iphone14promax-spaceblack": {
+    "portrait": {
+      "file": "apple-iphone14promax-spaceblack-portrait.png",
+      "width": 1450,
+      "height": 2936,
+      "x": 78,
+      "y": 68,
+      "screenWidth": 1294,
+      "screenHeight": 2800,
+      "name": "iPhone 14 pro max",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/apple-iphone14promax-spaceblack-portrait.png",
+      "credits": "<p><a href=\"https://developer.apple.com/design/resources/\" target=\"blank\">Apple Design Resources</a></p>"
+    },
+    "landscape": {
+      "file": "apple-iphone14promax-spaceblack-landscape.png",
+      "width": 2936,
+      "height": 1450,
+      "x": 68,
+      "y": 78,
+      "screenWidth": 2800,
+      "screenHeight": 1294,
+      "name": "iPhone 14 pro max",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/apple-iphone14promax-spaceblack-landscape.png",
+      "credits": "<p><a href=\"https://developer.apple.com/design/resources/\" target=\"blank\">Apple Design Resources</a></p>"
+    }
+  },
+  "google-pixel-7-obsidian": {
+    "portrait": {
+      "file": "google-pixel-7-obsidian-portrait.png",
+      "width": 1118,
+      "height": 2361,
+      "x": 36,
+      "y": 47,
+      "screenWidth": 1035,
+      "screenHeight": 2253,
+      "name": "Google Pixel 7",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/google-pixel-7-obsidian-portrait.png",
+      "credits": "<p><a href=\"https://www.figma.com/@brixtemplates\" target=\"blank\">BRIX Templates</a></p>"
+    },
+    "landscape": {
+      "file": "google-pixel-7-obsidian-landscape.png",
+      "width": 2361,
+      "height": 1118,
+      "x": 61,
+      "y": 47,
+      "screenWidth": 2253,
+      "screenHeight": 1035,
+      "name": "Google Pixel 7",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/google-pixel-7-obsidian-landscape.png",
+      "credits": "<p><a href=\"https://www.figma.com/@brixtemplates\" target=\"blank\">BRIX Templates</a></p>"
+    }
+  },
+  "google-pixel-8-obsidian": {
+    "portrait": {
+      "file": "google-pixel-8-obsidian-portrait.png",
+      "width": 978,
+      "height": 2100,
+      "x": 33,
+      "y": 49,
+      "screenWidth": 902,
+      "screenHeight": 2002,
+      "name": "Google Pixel 8",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/google-pixel-8-obsidian-portrait.png",
+      "credits": "<p><a href=\"https://www.figma.com/@sajjadmohamamdi\" target=\"blank\">Sajjad Mohammadi Nia</a></p>"
+    },
+    "landscape": {
+      "file": "google-pixel-8-obsidian-landscape.png",
+      "width": 2100,
+      "height": 978,
+      "x": 49,
+      "y": 43,
+      "screenWidth": 2002,
+      "screenHeight": 902,
+      "name": "Google Pixel 8",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/google-pixel-8-obsidian-landscape.png",
+      "credits": "<p><a href=\"https://www.figma.com/@sajjadmohamamdi\" target=\"blank\">Sajjad Mohammadi Nia</a></p>"
+    }
+  },
+  "samsung-galaxys20ultra-cosmicgrey": {
+    "portrait": {
+      "file": "samsung-galaxys20ultra-cosmicgrey-portrait.png",
+      "width": 1840,
+      "height": 3600,
+      "x": 200,
+      "y": 200,
+      "screenWidth": 1440,
+      "screenHeight": 3200,
+      "name": "Samsung Galaxy S20 Ultra",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/samsung-galaxys20ultra-cosmicgrey-portrait.png",
+      "credits": "<p><a href=\"https://design.facebook.com/toolsandresources/devices/\" target=\"blank\">Meta - Design Resources</a></p>"
+    },
+    "landscape": {
+      "file": "samsung-galaxys20ultra-cosmicgrey-landscape.png",
+      "width": 3600,
+      "height": 1840,
+      "x": 200,
+      "y": 200,
+      "screenWidth": 3200,
+      "screenHeight": 1440,
+      "name": "Samsung Galaxy S20 Ultra",
+      "source": "https://raw.githubusercontent.com/oursky/mockuphone.com/7e570f420ad91d895df926214c206d0833fb53a5/public/images/devices_picture/samsung-galaxys20ultra-cosmicgrey-landscape.png",
+      "credits": "<p><a href=\"https://design.facebook.com/toolsandresources/devices/\" target=\"blank\">Meta - Design Resources</a></p>"
+    }
+  }
+}

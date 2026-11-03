@@ -6,6 +6,7 @@ import path from 'node:path';
 import assert from 'node:assert/strict';
 import { jsPDF } from 'jspdf';
 
+async function ensureSettings(page){const toggle=page.getByRole('button',{name:/Comparison settings/});if(await toggle.getAttribute('aria-expanded')==='false')await toggle.click();}
 const root=path.resolve('dist');
 const prefix=process.argv.includes('--source-install')?'/dist':'';
 const server=createServer(async(req,res)=>{
@@ -28,28 +29,60 @@ try {
   async function expandRecent() {const toggle=page.locator('.recent-toggle');if(await toggle.getAttribute('aria-expanded')==='false')await toggle.click();}
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`http://127.0.0.1:4173${prefix}/panel.html`);
-  await page.getByRole('button',{name:'Mobile',exact:true}).click();
-  assert.equal(await page.getByLabel('Viewport preset',{exact:true}).inputValue(),'390x844');
-  await page.getByRole('button',{name:'iPad',exact:true}).click();
-  await page.getByLabel('Viewport preset',{exact:true}).selectOption('820x1180');
-  assert.equal(await page.getByLabel('Target viewport width',{exact:true}).inputValue(),'820');
-  assert.equal(await page.getByLabel('Target viewport height',{exact:true}).inputValue(),'1180');
+  async function checkKeyboardFocus(target,expectedColor){await page.keyboard.press('Tab');await target.focus();const style=await target.evaluate(el=>({visible:el.matches(':focus-visible'),width:parseFloat(getComputedStyle(el).outlineWidth),color:getComputedStyle(el).outlineColor}));assert.equal(style.visible,true);assert(style.width>=3);assert.equal(style.color,expectedColor);}
+  assert.equal(await page.evaluate(()=>getComputedStyle(document.body).backgroundColor),'rgb(255, 255, 255)');
+  assert.equal(await page.locator('.inputs>.card').first().evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 255, 255)');
+  await checkKeyboardFocus(page.getByRole('button',{name:'Compare',exact:true}),'rgb(11, 87, 208)');
+  assert.equal(await page.locator('.capture-preview').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(242, 242, 242)');
+  assert.equal(await page.getByRole('button',{name:'Desktop',exact:true}).evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(211, 227, 253)');
+  const activeTabColors=await page.getByRole('button',{name:'Compare',exact:true}).evaluate(el=>{const s=getComputedStyle(el);return {background:s.backgroundColor,bottom:s.borderBottomColor};});assert.equal(activeTabColors.background,'rgba(0, 0, 0, 0)');assert.equal(activeTabColors.bottom,'rgb(11, 87, 208)');
+  assert.equal(await page.evaluate(()=>getComputedStyle(document.body).color),'rgb(31, 31, 31)');
+  assert.equal(await page.locator('.inputs>.card').first().evaluate(el=>getComputedStyle(el).borderColor),'rgb(199, 199, 199)');
+  await checkKeyboardFocus(page.getByLabel('Screen size',{exact:true}),'rgb(11, 87, 208)');
+  await page.getByRole('button',{name:'Overview',exact:true}).click();await page.getByRole('heading',{name:'No comparison evidence yet',exact:true}).waitFor();assert.equal(await page.locator('.overview-metrics article').first().locator('strong').innerText(),'—');await page.getByRole('button',{name:'Compare',exact:true}).click();
+  const settingsToggle=page.getByRole('button',{name:/Comparison settings/});
+  const savedTolerance=await page.getByLabel('Spacing tolerance').inputValue();
+  assert.equal(await settingsToggle.getAttribute('aria-expanded'),'false');await settingsToggle.click();await settingsToggle.click();assert.equal(await settingsToggle.getAttribute('aria-expanded'),'false');assert.equal(await page.getByLabel('Spacing tolerance').isVisible(),false);
+  await settingsToggle.click();assert.equal(await settingsToggle.getAttribute('aria-expanded'),'true');assert.equal(await page.getByLabel('Spacing tolerance').inputValue(),savedTolerance);
+  await page.getByRole('button',{name:'Phone',exact:true}).click();
+  assert.equal(await page.getByLabel('Screen size',{exact:true}).inputValue(),'390x844');
+  for(const action of [page.getByRole('button',{name:'Choose file',exact:true}),page.locator('.capture-action')]){const box=await action.boundingBox();assert(box&&box.y+box.height<800,'Upload and Capture must appear without scrolling');}
+
+  for(const [preset,style] of [['iphone-12-pro','iphone-notch'],['iphone-15-pro-max','iphone-island'],['pixel-9','pixel'],['galaxy-s20-ultra','galaxy']]){
+    await page.getByLabel('Screen size',{exact:true}).selectOption(preset);
+    assert.equal(await page.locator(`.phone-frame[data-device-preset="${preset}"][data-frame-style="${style}"]`).count(),2,'Both previews should match the selected model');
+    await page.waitForFunction(()=>[...document.querySelectorAll('.device-mockup-image')].length===2&&[...document.querySelectorAll('.device-mockup-image')].every(img=>img.complete&&img.naturalWidth>0));
+    assert.equal(await page.locator('.phone-frame.image-device .device-side-buttons').count(),0,'PNG previews must not draw CSS hardware');
+    await page.getByRole('button',{name:'Landscape',exact:true}).click();assert.equal(await page.locator(`.landscape-frame[data-frame-style="${style}"]`).count(),2);
+    await page.getByRole('button',{name:'Portrait',exact:true}).click();
+  }
+  await page.setViewportSize({width:1440,height:1000});await page.getByLabel('Screen size',{exact:true}).selectOption('iphone-15-pro-max');await page.waitForFunction(()=>[...document.querySelectorAll('.device-mockup-image')].every(img=>img.complete&&img.naturalWidth>0));await page.screenshot({path:'artifacts/iphone-model-frames.png'});
+  await page.setViewportSize({width:1100,height:950});await page.getByLabel('Screen size',{exact:true}).selectOption('390x844');
+
+  assert((await page.locator('.phone-stage').first().boundingBox()).y<450,'Mobile previews should appear before 450px');
+  await page.getByRole('button',{name:'Tablet',exact:true}).click();
+  await page.getByLabel('Screen size',{exact:true}).selectOption('820x1180');
+  assert.match(await page.getByLabel('Selected viewport dimensions').innerText(), /820/);
+  assert.match(await page.getByLabel('Selected viewport dimensions').innerText(), /1180/);
   assert.equal(await page.locator('.tablet-frame').count(),2,'An iPad selection must use matching tablet previews');
+  assert((await page.locator('.phone-stage').first().boundingBox()).y<450,'iPad previews should appear before 450px');
+  await page.screenshot({path:'artifacts/ipad-compact-compare.png'});
   await page.getByRole('button',{name:'Landscape',exact:true}).click();
-  assert.equal(await page.getByLabel('Target viewport width',{exact:true}).inputValue(),'1180');assert.equal(await page.getByLabel('Target viewport height',{exact:true}).inputValue(),'820');
+  assert.match(await page.getByLabel('Selected viewport dimensions').innerText(), /1180/);assert.match(await page.getByLabel('Selected viewport dimensions').innerText(), /820/);
   assert.equal(await page.locator('.tablet-frame.landscape-frame').count(),2);
-  await page.getByRole('button',{name:'Mobile',exact:true}).click();
+  await page.getByRole('button',{name:'Phone',exact:true}).click();
   await page.getByRole('button',{name:'Landscape',exact:true}).click();
-  await page.getByLabel('Viewport preset',{exact:true}).selectOption('390x844');
-  assert.equal(await page.getByLabel('Target viewport width',{exact:true}).inputValue(),'844','Preset changes should preserve landscape choice');assert.equal(await page.locator('.landscape-frame').count(),2);
+  await page.getByLabel('Screen size',{exact:true}).selectOption('390x844');
+  assert.match(await page.getByLabel('Selected viewport dimensions').innerText(), /844/);assert.equal(await page.locator('.landscape-frame').count(),2);
   await page.getByRole('button',{name:'Portrait',exact:true}).click();
-  assert.equal(await page.getByLabel('Target viewport width',{exact:true}).inputValue(),'390');
-  await page.getByLabel('Viewport preset',{exact:true}).selectOption('360x800');
-  assert.equal(await page.getByLabel('Target viewport width',{exact:true}).inputValue(),'360');
+  assert.match(await page.getByLabel('Selected viewport dimensions').innerText(), /390/);
+  await page.getByLabel('Screen size',{exact:true}).selectOption('360x800');
+  assert.match(await page.getByLabel('Selected viewport dimensions').innerText(), /360/);
+  if(await page.getByRole('button',{name:'Custom size',exact:true}).count())await page.getByRole('button',{name:'Custom size',exact:true}).click();
   await page.getByLabel('Target viewport width',{exact:true}).fill('375');
-  assert.equal(await page.getByLabel('Viewport preset',{exact:true}).inputValue(),'custom');
+  assert.equal(await page.getByLabel('Screen size',{exact:true}).inputValue(),'custom');
   await page.getByRole('button',{name:'Desktop',exact:true}).click();
-  assert.equal(await page.getByLabel('Viewport preset',{exact:true}).inputValue(),'current');
+  assert.equal(await page.getByLabel('Screen size',{exact:true}).inputValue(),'current');
   const design=await page.evaluate(()=>{
     const c=document.createElement('canvas');c.width=1000;c.height=2600;const x=c.getContext('2d');
     x.fillStyle='#f5f7fb';x.fillRect(0,0,1000,2600);x.fillStyle='#fff';x.fillRect(0,0,1000,75);
@@ -65,6 +98,8 @@ try {
     Object.defineProperty(globalThis,'chrome',{value:api,configurable:true});
   },{design,snapshot});
   await page.route('http://127.0.0.1:8765/**',async route=>{
+    if(route.request().url().endsWith('/journey/status'))return route.fulfill({json:{browserInstalled:false,localAI:{ready:false,models:[]},allowedOrigins:[]}});
+    if(route.request().url().endsWith('/advisor/status'))return route.fulfill({json:{ready:false,models:[],detail:'No local model in isolated UI fixture'}});
     if(route.request().url().endsWith('/health')) {
       if(!serviceAvailable) return route.abort('connectionrefused');
       return route.fulfill({json:{ok:true,configured:true,ocrReady:true,externalServices:false,engine:'local-rules-v3',extensionConfigured:true}});
@@ -80,13 +115,13 @@ try {
   assert.equal(await page.locator('.recent').count(),0,'Empty recent comparisons should not occupy space');
   await page.setViewportSize({width:1920,height:1080});
   const wideMain=await page.locator('main').boundingBox();
-  assert(wideMain&&wideMain.width<=1700&&Math.abs(wideMain.x-(1920-wideMain.width)/2)<2,'Maximized workspace should be centered and width-limited');
+  assert(wideMain&&wideMain.width<=1700&&Math.abs(wideMain.x-(196+(1920-196-wideMain.width)/2))<2,'Maximized workspace should be centered in the content area beside the sidebar');
   const deviceControls=await page.locator('.device-controls').boundingBox();
   const cards=await page.locator('.inputs').boundingBox();
   assert(deviceControls.y+deviceControls.height<=cards.y,'Device controls must appear before the upload/capture cards');
   assert.match(await page.locator('#compare-readiness').innerText(),/Upload a reference/);
   const widePreview=await page.locator('.capture-preview').boundingBox();
-  assert(widePreview&&widePreview.height>=140&&widePreview.height<=200,'Mockup previews should leave room for settings and actions');
+  assert(widePreview&&widePreview.height>=100&&widePreview.height<=200,'Mockup previews should leave room for settings and actions');
   const wideAction=await compareButton.boundingBox();
   assert(wideAction&&wideAction.y+wideAction.height<=1080,'Compare must stay visible in a maximized window');
   await page.screenshot({path:'artifacts/workspace-maximized.png'});
@@ -104,29 +139,33 @@ try {
   await page.emulateMedia({colorScheme:'dark'});
   await page.screenshot({path:'artifacts/workspace-empty-dark.png',animations:'disabled'});
   await page.emulateMedia({colorScheme:'light'});
-  await page.getByLabel('Spacing tolerance').fill('12');
-  await page.getByLabel('Scale normalization').selectOption('strict');
-  await page.getByLabel('Scale normalization').selectOption('fit');
+  await ensureSettings(page);await page.getByLabel('Spacing tolerance').fill('12');
+  await ensureSettings(page);await page.getByLabel('Scale normalization').selectOption('strict');
+  await ensureSettings(page);await page.getByLabel('Scale normalization').selectOption('fit');
   await page.getByLabel('Upload mockup').setInputFiles({name:'design.png',mimeType:'image/png',buffer:Buffer.from(design.split(',')[1],'base64')});
   await page.getByRole('button',{name:'Capture full page',exact:true}).click();
   assert(await page.locator('.capture-preview.full-page').evaluate(element=>element.scrollHeight>element.clientHeight));
   // Each mode retains its own reference, actual image, viewport and comparison options.
-  await page.getByRole('button',{name:'Mobile',exact:true}).click();
+  await page.getByRole('button',{name:'Phone',exact:true}).click();
   assert.equal(await page.getByRole('img',{name:'Uploaded reference design',exact:true}).count(),0);
   assert.equal(await page.getByRole('button',{name:'Remove live capture',exact:true}).count(),0);
+  await page.evaluate(()=>{chrome.permissions.contains=async()=>true;globalThis.originalSendMessage=chrome.runtime.sendMessage;chrome.runtime.sendMessage=async message=>message.type==='validateViewport'?{error:'Live viewport is 1280 × 631. Set Device Toolbar to 375 × 844 CSS px, then capture again.'}:message.type==='previewOpen'?(globalThis.matchingPreviewRequested=true,{error:'Test preview unavailable'}):globalThis.originalSendMessage(message);});
+  await page.locator('.capture-action').click();await page.locator('.viewport-mismatch').waitFor();assert.match(await page.locator('.viewport-mismatch').innerText(),/Current: 1280 × 631/);assert.match(await page.locator('.viewport-mismatch').innerText(),/Selected:/);await page.screenshot({path:'artifacts/viewport-mismatch-guidance.png'});
+  await page.getByRole('button',{name:'Open matching preview',exact:true}).click();await page.waitForFunction(()=>globalThis.matchingPreviewRequested===true);await page.getByRole('button',{name:'Dismiss error',exact:true}).click();await page.evaluate(()=>{chrome.runtime.sendMessage=globalThis.originalSendMessage;});
   const mobile=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=390;c.height=2600;c.getContext('2d').fillRect(0,0,390,2600);return c.toDataURL('image/png');});
   const mobileCapture=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=390;c.height=3600;c.getContext('2d').fillRect(0,0,390,3600);return c.toDataURL('image/png');});
   await page.getByLabel('Upload mockup').setInputFiles({name:'mobile.png',mimeType:'image/png',buffer:Buffer.from(mobile.split(',')[1],'base64')});
   await page.getByText('Upload a capture instead',{exact:true}).click();
   await page.getByLabel('Upload actual screenshot',{exact:true}).setInputFiles({name:'mobile-capture.png',mimeType:'image/png',buffer:Buffer.from(mobileCapture.split(',')[1],'base64')});
   await page.getByRole('button',{name:'Remove live capture',exact:true}).waitFor();
-  await page.getByLabel('Spacing tolerance').fill('4');
+  await ensureSettings(page);await page.getByLabel('Spacing tolerance').fill('4');
+  if(await page.getByRole('button',{name:'Custom size',exact:true}).count())await page.getByRole('button',{name:'Custom size',exact:true}).click();
   await page.getByLabel('Target viewport width',{exact:true}).fill('375');
   await page.getByRole('button',{name:'Desktop',exact:true}).click();
   assert.equal(await page.getByLabel('Spacing tolerance').inputValue(),'12');
   assert.equal(await page.getByRole('img',{name:'Uploaded reference design',exact:true}).getAttribute('src'),design);
   assert.equal(await page.locator('.capture-preview img').getAttribute('src'),design);
-  await page.getByRole('button',{name:'Mobile',exact:true}).click();
+  await page.getByRole('button',{name:'Phone',exact:true}).click();
   assert.equal(await page.getByLabel('Target viewport width',{exact:true}).inputValue(),'375');
   assert.equal(await page.getByLabel('Spacing tolerance').inputValue(),'4');
   assert.equal(await page.getByLabel('Mobile capture screen',{exact:true}).locator('img').getAttribute('src'),mobileCapture);
@@ -134,10 +173,11 @@ try {
   const phoneReference=page.getByLabel('Mobile reference screen',{exact:true}),phoneCapture=page.getByLabel('Mobile capture screen',{exact:true});
   await phoneReference.evaluate(el=>{el.scrollTop=(el.scrollHeight-el.clientHeight)*.6;});
   await page.waitForFunction(()=>{const screens=[...document.querySelectorAll('.phone-screen')];return screens.length===2&&screens.every(el=>Math.abs(el.scrollTop/Math.max(1,el.scrollHeight-el.clientHeight)-.6)<.02);});
-  await page.getByRole('button',{name:'iPad',exact:true}).click();
-  await page.getByLabel('Viewport preset',{exact:true}).selectOption('1024x1366');
+  await page.getByRole('button',{name:'Tablet',exact:true}).click();
+  await page.getByLabel('Screen size',{exact:true}).selectOption('1024x1366');
   assert.equal(await page.locator('.tablet-frame').count(),2);
-  await page.getByRole('button',{name:'Mobile',exact:true}).click();
+  await page.getByRole('button',{name:'Phone',exact:true}).click();
+  if(await page.getByRole('button',{name:'Custom size',exact:true}).count())await page.getByRole('button',{name:'Custom size',exact:true}).click();
   await page.getByLabel('Target viewport width',{exact:true}).fill('375');
   await page.getByLabel('Target viewport height',{exact:true}).fill('844');
   await page.getByLabel('Mobile preview zoom',{exact:true}).selectOption('150');
@@ -170,7 +210,7 @@ try {
   assert(compareBox&&compareBox.y>=0&&compareBox.y+compareBox.height<=760,'Compare action must remain in view after scrolling');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   const headerBox=await page.locator('.workspace-header').boundingBox();assert.equal(headerBox.y,0);
-  assert.equal(await page.locator('.service.offline .service-dot').evaluate(el=>getComputedStyle(el).color),'rgb(240, 180, 78)','Offline indicator should be amber');
+  assert.equal(await page.locator('.service.offline .service-dot').evaluate(el=>getComputedStyle(el).color),'rgb(153, 92, 0)','Offline indicator should be amber');
   await page.locator('.comparison-parameters').scrollIntoViewIfNeeded();
   await page.evaluate(()=>document.querySelector('main').scrollTo(0,document.querySelector('main').scrollHeight));
   const settingsBounds=await page.locator('.comparison-parameters').boundingBox();
@@ -188,7 +228,7 @@ try {
   await page.keyboard.press('Control+Enter');
   await page.getByRole('heading',{name:'1 active finding',exact:true}).waitFor();
   await page.getByRole('button',{name:'Compare',exact:true}).click();
-  await page.getByRole('button',{name:'Mobile',exact:true}).click();
+  await page.getByRole('button',{name:'Phone',exact:true}).click();
   assert.equal(await page.getByRole('button',{name:/^Results/}).count(),0,'Desktop results must not appear in mobile workspace');
   await page.getByRole('button',{name:'Desktop',exact:true}).click();
   await page.getByRole('button',{name:/^Results/}).click();
@@ -286,22 +326,24 @@ try {
   await themed.route('http://127.0.0.1:8765/**',route=>route.fulfill({json:{configured:true,extensionConfigured:true}}));
   await themed.goto(`http://127.0.0.1:4173${prefix}/panel.html`);
   await themed.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
-  assert.equal(await themed.evaluate(()=>getComputedStyle(document.body).backgroundColor),'rgb(22, 43, 50)');
+  assert.equal(await themed.evaluate(()=>getComputedStyle(document.body).backgroundColor),'rgb(31, 31, 31)');
+  await themed.keyboard.press('Tab');await themed.getByLabel('Screen size',{exact:true}).focus();assert.equal(await themed.getByLabel('Screen size',{exact:true}).evaluate(el=>getComputedStyle(el).outlineColor),'rgb(168, 199, 250)');
   await themed.screenshot({path:'artifacts/workspace-host-dark.png',animations:'disabled'});
   await themed.evaluate(()=>globalThis.hostThemeChange('default'));
   assert.equal(await themed.evaluate(()=>document.documentElement.dataset.theme),'light');
   await themed.close();
   // Mobile Results uses the same device shell around actual annotated pixels.
-  await page.getByRole('button',{name:'Compare',exact:true}).click();await page.getByRole('button',{name:'Mobile',exact:true}).click();
+  await page.getByRole('button',{name:'Compare',exact:true}).click();await page.getByRole('button',{name:'Phone',exact:true}).click();
   const resultImages=await page.evaluate(()=>{const make=changed=>{const c=document.createElement('canvas');c.width=390;c.height=1200;const x=c.getContext('2d');x.fillStyle='white';x.fillRect(0,0,390,1200);if(changed){x.fillStyle='#b0b0b0';x.fillRect(40,350,280,200);}return c.toDataURL('image/png');};return {reference:make(false),actual:make(true)};});
   await page.getByLabel('Upload mockup').setInputFiles({name:'mobile-result.png',mimeType:'image/png',buffer:Buffer.from(resultImages.reference.split(',')[1],'base64')});
   const actualDetails=page.locator('.capture-controls details');if(!await actualDetails.evaluate(el=>el.open))await actualDetails.locator('summary').click();
   await page.getByLabel('Upload actual screenshot').setInputFiles({name:'mobile-actual.png',mimeType:'image/png',buffer:Buffer.from(resultImages.actual.split(',')[1],'base64')});await page.getByRole('button',{name:'Remove live capture',exact:true}).waitFor();
-  await page.getByLabel('Browser-only comparison',{exact:true}).check();await page.getByLabel('Spacing tolerance').fill('0');await page.getByRole('button',{name:/Compare & analyze/}).click();
+  await ensureSettings(page);await page.getByLabel('Browser-only comparison',{exact:true}).check();await ensureSettings(page);await page.getByLabel('Spacing tolerance').fill('0');await page.getByRole('button',{name:/Compare & analyze/}).click();
   await page.getByRole('heading',{name:'1 active finding',exact:true}).waitFor();
   assert.equal(await page.locator('.phone-frame').count(),2);
   const referenceScreen=page.getByLabel('Mobile Results reference screen',{exact:true}),annotatedScreen=page.getByLabel('Mobile Results annotated screen',{exact:true});
   await annotatedScreen.locator('canvas').waitFor();
+  assert.equal(await page.locator('.device-mockup-image').count(),2,'Results must use the same PNG artwork');
   assert.equal(await annotatedScreen.locator('canvas').evaluate(canvas=>{const p=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;for(let i=0;i<p.length;i+=4)if(p[i]>p[i+1]+50&&p[i]>p[i+2]+50)return true;return false;}),true,'Numbered red annotations must remain inside the phone screen');
   await page.getByLabel('Mobile preview zoom',{exact:true}).selectOption('150');assert.equal(Math.round(await annotatedScreen.locator('.canvas-host').evaluate(el=>el.getBoundingClientRect().width)),563);
   await referenceScreen.evaluate(el=>{el.scrollTop=(el.scrollHeight-el.clientHeight)*.5;});
@@ -316,6 +358,19 @@ try {
   await page.getByLabel('Comparison view',{exact:true}).selectOption('side-by-side');await annotatedScreen.locator('canvas').waitFor();
   await page.getByLabel('Mobile preview zoom',{exact:true}).selectOption('fit');await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:'artifacts/mobile-results-phones.png',fullPage:true});
   await page.getByRole('button',{name:'Compare',exact:true}).click();await page.getByRole('button',{name:'Desktop',exact:true}).click();assert.equal(await page.locator('.phone-frame').count(),0,'Desktop must retain its original previews');
+  await page.getByRole('button',{name:'TV',exact:true}).click();await page.setViewportSize({width:1440,height:1000});assert.equal(await page.locator('.tv-frame').count(),2);await page.screenshot({path:'artifacts/tv-empty.png',fullPage:true});
+  for(const brand of ['samsung','lg','sony']){await page.getByLabel('Screen size',{exact:true}).selectOption(`tv-${brand}-4k`);assert.equal(await page.locator(`.phone-frame[data-frame-style="tv-${brand}"]`).count(),2);const geometry=await page.locator('.inputs').evaluate(el=>{const rect=e=>{const r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:r.height};};return {stands:[...el.querySelectorAll('.tv-stand')].map(e=>({stand:rect(e),stage:rect(e.closest('.phone-stage'))})),choose:rect(el.querySelector('.source-action')),capture:rect(el.querySelector('.capture-action')),referenceFooter:rect(el.querySelector('.reference-caption')),captureFooter:rect(el.querySelector('.capture-caption'))};});for(const item of geometry.stands)assert(item.stand.bottom<=item.stage.bottom-8,'Complete TV stand must fit inside preview');assert(Math.abs(geometry.choose.height-geometry.capture.height)<1,'Upload and capture button heights must match');assert(Math.abs(geometry.choose.top-geometry.capture.top)<1,'Upload and capture actions must align');assert(Math.abs(geometry.referenceFooter.top-geometry.captureFooter.top)<1,'Card footer captions must align');await page.screenshot({path:`artifacts/tv-${brand}-frame.png`});}
+  await page.getByLabel('Screen size',{exact:true}).selectOption('tv-sony-4k');
+  await page.getByLabel('Upload mockup').setInputFiles({name:'tv-reference.png',mimeType:'image/png',buffer:Buffer.from(resultImages.reference.split(',')[1],'base64')});
+  const tvDetails=page.locator('.capture-controls details');if(!await tvDetails.evaluate(el=>el.open))await tvDetails.locator('summary').click();
+  await page.getByLabel('Upload actual screenshot').setInputFiles({name:'tv-actual.png',mimeType:'image/png',buffer:Buffer.from(resultImages.actual.split(',')[1],'base64')});await page.getByRole('button',{name:'Remove live capture',exact:true}).waitFor();await ensureSettings(page);await page.getByLabel('Browser-only comparison',{exact:true}).check();await page.getByRole('button',{name:/Compare & analyze/}).click();await page.getByLabel('Comparison view',{exact:true}).waitFor();assert.equal(await page.locator('.tv-frame').count(),2);
+  await page.getByLabel('Comparison view',{exact:true}).selectOption('overlay');assert.equal(await page.locator('.tv-frame.device-tv-sony').count(),1);await page.getByLabel('Mobile overlay screen',{exact:true}).locator('canvas').waitFor();
+  await page.getByLabel('Comparison view',{exact:true}).selectOption('difference');assert.equal(await page.locator('.tv-frame.device-tv-sony').count(),1);await page.getByLabel('Mobile difference screen',{exact:true}).locator('canvas').waitFor();
+  await page.setViewportSize({width:1920,height:1080});await page.getByRole('button',{name:'Overview',exact:true}).click();const overview=page.getByRole('main',{name:'Workspace overview',exact:true});await overview.waitFor();assert.equal(await page.getByRole('navigation',{name:'Platform workspace',exact:true}).isVisible(),true);assert.equal(await page.getByRole('navigation',{name:'Workspace',exact:true}).isVisible(),false);assert.equal(await page.getByRole('navigation',{name:'Platform workspace',exact:true}).getByRole('button',{name:'Overview',exact:true}).evaluate(el=>getComputedStyle(el).color),'rgb(11, 87, 208)');assert.equal(await overview.getByText('92%',{exact:true}).count(),0,'Dashboard must not invent a design compliance score');assert.equal(await overview.locator('.overview-metrics article').count(),4);await overview.getByRole('img',{name:'Overview annotated capture',exact:true}).waitFor();
+  await overview.getByRole('button',{name:'Overlay',exact:true}).click();await overview.locator('.visual-modes canvas').waitFor();await overview.getByRole('button',{name:'Difference',exact:true}).click();await overview.locator('.visual-modes canvas').waitFor();await overview.getByRole('button',{name:'Side-by-side',exact:true}).click();await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:'artifacts/enterprise-overview.png',fullPage:true});
+  const overviewTriage=overview.getByLabel(/^Triage /).first();const triageTitle=await overviewTriage.getAttribute('aria-label');const comparisonId=await overview.getByLabel('Overview comparison',{exact:true}).inputValue();await overviewTriage.selectOption('accepted');await page.waitForFunction(async({id,title})=>{const db=await new Promise(resolve=>{const r=indexedDB.open('project-1',1);r.onsuccess=()=>resolve(r.result);});const record=await new Promise(resolve=>{const r=db.transaction('comparisons').objectStore('comparisons').get(id);r.onsuccess=()=>resolve(r.result);});db.close();return record?.issues.some(issue=>'Triage '+issue.title===title&&issue.review?.status==='accepted');},{id:comparisonId,title:triageTitle});await overview.getByLabel('Show reviewed',{exact:true}).check();await overview.getByLabel(triageTitle,{exact:true}).selectOption('open');await overview.getByLabel('Show reviewed',{exact:true}).uncheck();
+  await overview.getByRole('button',{name:/^High /}).click();await overview.getByRole('button',{name:/^All /}).click();await overview.getByRole('button',{name:'Review finding',exact:true}).first().click();await page.getByLabel('Comparison view',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'Overview',exact:true}).click();await overview.getByRole('button',{name:'Open Tablet',exact:true}).click();assert.equal(await page.getByRole('button',{name:'Tablet',exact:true}).getAttribute('aria-pressed'),'true');await page.getByRole('button',{name:'Overview',exact:true}).click();await page.setViewportSize({width:420,height:900});assert.equal(await page.getByRole('navigation',{name:'Platform workspace',exact:true}).isVisible(),false);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await page.screenshot({path:'artifacts/enterprise-overview-narrow.png',fullPage:true});
   assert.deepEqual(errors,[]);
   console.log('PASS: compact workspace, sticky actions, offline/reconnect guidance, single and batch Undo persistence, capture, PDF input, annotations, history, PNG/PDF exports, and narrow layout. Capture/comparison mocked.');
 } finally {await browser?.close();await new Promise(resolve=>server.close(resolve));}

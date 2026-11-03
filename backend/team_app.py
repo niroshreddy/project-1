@@ -1,4 +1,5 @@
 """Self-hosted team API. Run behind HTTPS; SQLite data belongs on a persistent volume."""
+import base64
 import hashlib
 import hmac
 import json
@@ -12,7 +13,8 @@ from typing import Literal
 from fastapi import FastAPI, Depends, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, model_validator
+from backend.knowledge import TraceReport
 from backend.app import CompareRequest, Analysis, Finding, Snapshot, Box, decode_image
 from backend.local_engine import analyze, ENGINE
 import asyncio
@@ -142,6 +144,21 @@ class SavedRecord(Analysis):
     pinned: bool = False
     verification: list[Verification] | None = Field(default=None,max_length=40)
     approval: Approval | None = None
+    knowledge: TraceReport | None = None
+
+    @model_validator(mode='after')
+    def trace_matches_capture(self):
+        if self.knowledge:
+            trace=self.knowledge
+            if trace.comparisonId!=self.id or trace.capture.page!=self.capture.snapshot.url or trace.capture.capturedAt!=self.capture.capturedAt or trace.capture.width!=self.capture.snapshot.width or trace.capture.height!=self.capture.snapshot.height:
+                raise ValueError('Knowledge trace must belong to this comparison and capture.')
+            reference=self.sourceDesign or self.design
+            try:
+                fingerprint=hashlib.sha256(base64.b64decode(reference.image.split(',',1)[1],validate=True)).hexdigest()
+            except Exception as exc: raise ValueError('Invalid trace reference image.') from exc
+            if fingerprint!=trace.referenceHash: raise ValueError('Knowledge trace reference changed. Re-evaluate the comparison.')
+        return self
+
 
 @app.middleware('http')
 async def controls(request: Request,call_next):

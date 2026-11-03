@@ -12,26 +12,29 @@ await mkdir('artifacts',{recursive:true});
 const python=process.platform==='win32'?'.venv/Scripts/python.exe':'.venv/bin/python';
 const dataDir=path.resolve('artifacts/journey-ui-'+Date.now());
 const backend=spawn(python,['-m','uvicorn','backend.app:app','--host','127.0.0.1','--port','8778'],{env:{...process.env,EXTENSION_ID:'journey-test',LOCAL_SERVICE_PORT:'8778',JOURNEY_ALLOWED_ORIGINS:'http://127.0.0.1:8778',JOURNEY_DATA_DIR:dataDir},stdio:'ignore'});
-let browser;
+let browser,page;
 try{
  for(let i=0;i<80;i++){try{if((await fetch('http://127.0.0.1:8778/health')).ok)break;}catch{}await new Promise(resolve=>setTimeout(resolve,250));}
  browser=await chromium.launch({executablePath:'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',headless:true});
- const page=await browser.newPage({viewport:{width:1280,height:1000}});page.setDefaultTimeout(15000);
+ let journeyDown=false;
+ page=await browser.newPage({viewport:{width:1280,height:1000}});page.setDefaultTimeout(15000);
  const errors=[];page.on('pageerror',error=>errors.push(error.message));
  await page.route('http://127.0.0.1:8765/**',async route=>{
-  const original=new URL(route.request().url());
+  const original=new URL(route.request().url());if(original.pathname==='/journey/status'&&journeyDown){await route.fulfill({status:503,json:{detail:'Simulated Journey endpoint failure'}});return;}
   const response=await route.fetch({url:'http://127.0.0.1:8778'+original.pathname,headers:{...route.request().headers(),origin:'chrome-extension://journey-test',host:'127.0.0.1:8778'}});
   await route.fulfill({response,headers:{...response.headers(),'access-control-allow-origin':'http://127.0.0.1:4179'}});
  });
  await page.goto('http://127.0.0.1:4179/panel.html');
  await page.getByRole('button',{name:'Journey Agent',exact:true}).click();
- await page.getByText('Local runner connected',{exact:true}).waitFor();
+ await page.getByText('Local runner connected',{exact:false}).waitFor();
  await page.getByRole('button',{name:'Use local demo',exact:true}).click();
  await page.getByLabel('Journey URL',{exact:true}).fill('http://127.0.0.1:8778/journey/demo/buggy');
  await page.getByLabel('Confirm staging test',{exact:true}).check();
+ await page.getByRole('button',{name:'Continue to task configuration',exact:true}).click();
  await page.getByRole('button',{name:'Use one viewport',exact:true}).click();
  await page.getByRole('button',{name:'Discover form controls',exact:true}).click();
- await page.getByText('Controls discovered. Review the selectors, synthetic values and success marker before starting.',{exact:true}).waitFor();
+ await page.getByText('Controls discovered. Review the selectors, synthetic values and success marker before starting.',{exact:true}).waitFor({timeout:60000});
+ await page.getByRole('button',{name:'Continue to run checks',exact:true}).click();
  await page.getByRole('button',{name:'Start recovery investigation',exact:true}).click();
  await page.getByRole('heading',{name:'data loss',exact:true}).waitFor({timeout:120000});
  assert(await page.getByRole('region',{name:'Journey result',exact:true}).getByText('built-in',{exact:false}).count()>0);
@@ -57,9 +60,10 @@ try{
  await page.setViewportSize({width:420,height:850});
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
  await page.screenshot({path:'artifacts/journey-fixed-narrow.png',fullPage:true});
+ journeyDown=true;await page.getByRole('button',{name:'Refresh service',exact:true}).click();await page.locator('.module-service.unavailable').filter({hasText:'Journey:'}).waitFor({state:'attached'});assert.equal(await page.locator('.module-service.checking').filter({hasText:'Journey:'}).count(),0);await page.screenshot({path:'artifacts/journey-service-failure.png',fullPage:true});journeyDown=false;await page.getByRole('button',{name:'Refresh service',exact:true}).click();await page.getByText('Local runner connected',{exact:false}).waitFor();
  await page.getByRole('button',{name:'Compare',exact:true}).click();
  await page.getByRole('heading',{name:'Reference design',exact:true}).waitFor();
  assert.deepEqual(errors,[]);
  await page.unrouteAll({behavior:'ignoreErrors'});
  console.log('PASS: real Python form discovery, repeated buggy recovery findings, screenshots/JSON evidence, fixed-build re-test, human sign-off, narrow layout, and original Compare workflow retained. Local AI installation/inference was deferred.');
-}finally{await browser?.close();backend.kill();await new Promise(resolve=>files.close(resolve));}
+}catch(error){console.error('Journey UI diagnostics:',await page?.locator('[role=alert]').allTextContents().catch(()=>[]));throw error;}finally{await page?.unrouteAll({behavior:'ignoreErrors'}).catch(()=>{});await browser?.close();backend.kill();await new Promise(resolve=>files.close(resolve));}

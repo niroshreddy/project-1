@@ -21,9 +21,12 @@ try{
  assert.equal(evidence.width,390);assert.equal(evidence.controls.length,3);
  assert.equal(evidence.controls[0].name,'Postal code');
  assert(!JSON.stringify(evidence).includes('SECRET'));
+ let advisorDown=false;
  const page=await browser.newPage({viewport:{width:1200,height:950}});const errors=[];page.on('pageerror',error=>errors.push(error.message));
  await page.addInitScript(evidence=>{globalThis.chrome={permissions:{request:async()=>true},devtools:{inspectedWindow:{tabId:42}},runtime:{sendMessage:async payload=>payload.type==='advisorEvidence'?{data:evidence}:{error:'Unexpected action'}}};},evidence);
  await page.route('http://127.0.0.1:8765/**',async route=>{const url=new URL(route.request().url());
+  if(url.pathname==='/journey/status')return route.fulfill({json:{browserInstalled:false,localAI:{ready:false,models:[]},allowedOrigins:[]}});
+  if(url.pathname==='/advisor/status'&&advisorDown){await route.fulfill({status:typeof advisorDown==='number'?advisorDown:503,json:{detail:'Simulated advisor endpoint failure'}});return;}
   if(url.pathname==='/advisor/status'){await route.fulfill({json:{ready:false,models:[],detail:'Local AI not installed'},headers:{'access-control-allow-origin':'http://127.0.0.1:4182'}});return;}
   const response=await route.fetch({url:'http://127.0.0.1:8782'+url.pathname,headers:{...route.request().headers(),origin:'chrome-extension://advisor-test',host:'127.0.0.1:8782'}});
   await route.fulfill({response,headers:{...response.headers(),'access-control-allow-origin':'http://127.0.0.1:4182'}});
@@ -31,6 +34,7 @@ try{
  await page.goto('http://127.0.0.1:4182/panel.html');
  await page.getByRole('button',{name:'Ask this page',exact:true}).click();
  await page.getByText('Built-in checks available · Local AI unavailable',{exact:true}).waitFor();
+ await page.getByRole('group',{name:'UX question shortcuts'}).getByRole('button',{name:'Accessibility',exact:true}).click();assert.match(await page.getByLabel('UX question',{exact:true}).inputValue(),/accessibility/);
  await page.getByRole('button',{name:'Collect page evidence',exact:true}).click();
  const run=page.getByRole('button',{name:'Run built-in UX checks',exact:true});assert.equal(await run.isDisabled(),true);
  await page.getByLabel('I reviewed the evidence and question for sensitive information.',{exact:true}).check();
@@ -44,7 +48,9 @@ try{
  assert.equal(await page.getByRole('heading',{name:'Built-in checks · No AI answer',exact:true}).count(),0);
  await page.getByRole('button',{name:'Clear evidence and report',exact:true}).click();
  await page.getByRole('button',{name:'Collect page evidence',exact:true}).waitFor();
+ advisorDown=true;await page.getByRole('button',{name:'Check advisor connection',exact:true}).click();await page.locator('.module-service.unavailable').filter({hasText:'Advisor:'}).waitFor({state:'attached'});assert.equal(await page.getByText('Checking local Python service…',{exact:true}).count(),0);assert.equal(await page.locator('.module-service.checking').filter({hasText:'Advisor:'}).count(),0);assert.equal(await run.isDisabled(),true);await page.screenshot({path:'artifacts/advisor-service-failure.png',fullPage:true});for(const code of [403,404]){advisorDown=code;await page.getByRole('button',{name:'Check advisor connection',exact:true}).click();await page.getByText(code===403?/Advisor is not connected/:/Advisor needs the updated Python service/).waitFor();assert.equal(await page.locator('.module-service.checking').filter({hasText:'Advisor:'}).count(),0);}
+ advisorDown=false;await page.getByRole('button',{name:'Check advisor connection',exact:true}).click();await page.locator('.module-service.ready').filter({hasText:'Advisor:'}).waitFor({state:'attached'});
  await page.getByRole('button',{name:'Compare',exact:true}).click();await page.getByRole('heading',{name:'Reference design',exact:true}).waitFor();
  assert.deepEqual(errors,[]);await page.unrouteAll({behavior:'ignoreErrors'});
  console.log('PASS: DOM evidence privacy, real Python checks, consent, QA/export, narrow layout and Compare preserved. Real local model inference deferred.');
-}finally{await browser?.close();backend.kill();await new Promise(resolve=>server.close(resolve));}
+}finally{for(const context of browser?.contexts()??[])for(const page of context.pages())await page.unrouteAll({behavior:'ignoreErrors'});await browser?.close();backend.kill();await new Promise(resolve=>server.close(resolve));}

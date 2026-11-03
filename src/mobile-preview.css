@@ -10,3 +10,82 @@
 .landscape-frame .phone-bezel span{width:7px;height:42%}
 .landscape-frame .phone-home span{width:3px;height:38%}
 .tablet-frame.landscape-frame .phone-bezel span{width:7px;height:7px}
+
+.phone-frame.tv-frame{width:min(100%,720px,calc(42vh * var(--phone-ratio)));border-radius:10px;padding:8px;display:block;border-width:4px;position:relative}.tv-frame .phone-bezel,.tv-frame .phone-home{display:none}.tv-frame .phone-screen{border-radius:2px}.phone-stage:has(.tv-frame){padding-bottom:24px}.tv-frame::after{content:"";position:absolute;bottom:0;left:45%;width:10%;height:3px;background:var(--teal)}
+
+/* Model-family shells. Camera details stay outside the screenshot content. */
+.phone-frame.device-iphone-notch,.phone-frame.device-iphone-island{border-color:#829098;border-radius:34px;padding-inline:5px;box-shadow:0 0 0 1px #26353c,0 4px 10px #102e3b24}
+.device-iphone-notch .phone-bezel,.device-iphone-island .phone-bezel{height:20px}
+.device-iphone-notch .phone-bezel span{width:45%;height:12px;border-radius:0 0 9px 9px;align-self:start}
+.device-iphone-island .phone-bezel span{width:30%;height:10px;border-radius:12px}
+.device-iphone-notch .phone-screen,.device-iphone-island .phone-screen{border-radius:22px}
+.phone-frame.device-pixel{border-color:#75838a;border-radius:29px;padding-inline:5px}
+.phone-frame.device-galaxy{border-color:#849098;border-radius:13px;padding-inline:4px}
+.device-pixel .phone-bezel,.device-galaxy .phone-bezel{height:17px}
+.device-pixel .phone-bezel span,.device-galaxy .phone-bezel span{width:7px;height:7px;border-radius:50%;box-shadow:inset 0 0 0 1px #34424c}
+.device-pixel .phone-screen{border-radius:19px}.device-galaxy .phone-screen{border-radius:7px}
+.phone-frame.device-ipad{border-radius:22px}.phone-frame.device-ipad-pro{border-radius:17px;border-color:#7b8991;padding-inline:7px}
+.device-ipad-pro .phone-bezel{height:13px}.device-ipad-pro .phone-screen{border-radius:8px}
+.phone-frame.landscape-frame.device-iphone-notch,.phone-frame.landscape-frame.device-iphone-island,.phone-frame.landscape-frame.device-pixel,.phone-frame.landscape-frame.device-galaxy,.phone-frame.landscape-frame.device-ipad-pro{padding:5px 0}
+.landscape-frame.device-iphone-notch .phone-bezel,.landscape-frame.device-iphone-island .phone-bezel,.landscape-frame.device-pixel .phone-bezel,.landscape-frame.device-galaxy .phone-bezel,.landscape-frame.device-ipad-pro .phone-bezel{height:auto}
+.landscape-frame.device-iphone-notch .phone-bezel span{width:12px;height:45%;align-self:center;justify-self:start;border-radius:0 9px 9px 0}
+.landscape-frame.device-iphone-island .phone-bezel span{width:10px;height:30%}
+.landscape-frame.device-pixel .phone-bezel span,.landscape-frame.device-galaxy .phone-bezel span{width:7px;height:7px}
+
+/* Hardware details decorate the preview, never the underlying raster or exports. */
+.phone-frame:not(.tv-frame){position:relative;overflow:visible}
+.phone-frame:not(.tv-frame):not(.tablet-frame){padding:6px}
+.phone-frame:not(.tv-frame):not(.tablet-frame) .phone-screen{overflow:auto;border-radius:24px}
+.phone-frame:not(.tv-frame):not(.tablet-frame) .phone-bezel{position:absolute;top:9px;left:6px;right:6px;height:15px;z-index:2;pointer-events:none}
+.phone-frame:not(.tv-frame):not(.tablet-frame) .phone-home{position:absolute;bottom:10px;left:20%;right:20%;height:5px;z-index:2;pointer-events:none}
+.phone-frame:not(.tv-frame):not(.tablet-frame) .phone-home span{background:#a2a8ac;box-shadow:0 0 1px #111;width:40%}
+.phone-frame.device-iphone-notch .phone-bezel{top:5px}.device-iphone-notch .phone-bezel span{height:14px;width:43%;border-radius:0 0 11px 11px;background:#070b0e}
+.device-iphone-island .phone-bezel span{height:11px;width:28%;box-shadow:inset -4px 0 0 #141c24}
+.device-side-buttons{position:absolute;inset:0;pointer-events:none}.device-side-buttons i{position:absolute;left:-5px;top:18%;width:3px;height:6%;border-radius:2px;background:#72818a}.device-side-buttons i:nth-child(2){top:27%}.device-side-buttons i:nth-child(3){left:auto;right:-5px;top:24%;height:11%}
+.phone-frame.device-galaxy{border-radius:15px}.phone-frame.device-galaxy .phone-screen{border-radius:8px!important}
+.phone-frame.device-pixel .phone-screen{border-radius:22px!important}
+.phone-frame[data-device-preset='iphone-12-pro']{border-color:#8b9ba3;border-radius:30px}
+.phone-frame[data-device-preset='iphone-14-pro'],.phone-frame[data-device-preset='iphone-14-pro-max']{border-color:#656575}
+.phone-frame[data-device-preset='iphone-15-pro'],.phone-frame[data-device-preset='iphone-15-pro-max']{border-color:#918f86}
+.phone-frame[data-device-preset='iphone-16-pro'],.phone-frame[data-device-preset='iphone-16-pro-max']{border-color:#a39b90;border-width:2px}
+.phone-frame[data-device-preset='pixel-9'],.phone-frame[data-device-preset='pixel-9-pro']{border-radius:34px;border-color:#969c9d}
+.phone-frame.tablet-frame:not(.tv-frame){padding:14px 12px;position:relative}.tablet-frame:not(.tv-frame) .phone-bezel{position:absolute;top:2px;left:0;right:0;height:10px;pointer-events:none;z-index:2}.tablet-frame:not(.tv-frame) .phone-home{display:none}.tablet-frame .device-side-buttons i{display:none}.tablet-frame .device-side-buttons i:nth-child(3){display:block;top:10%;height:6%}
+.phone-frame.device-ipad-pro .phone-bezel{left:auto;right:0;top:0;bottom:0;width:10px;height:auto}.device-ipad-pro .phone-bezel span{width:5px;height:5px}
+.phone-frame.landscape-frame:not(.tv-frame){display:block;padding:6px}.landscape-frame:not(.tv-frame):not(.tablet-frame) .phone-bezel{left:9px;top:6px;bottom:6px;right:auto;width:15px;height:auto}.landscape-frame:not(.tv-frame):not(.tablet-frame) .phone-home{left:auto;right:10px;top:20%;bottom:20%;width:5px;height:auto}.landscape-frame .phone-home span{height:40%!important;width:3px!important}.landscape-frame.device-iphone-notch .phone-bezel{left:5px}.landscape-frame.device-iphone-notch .phone-bezel span{width:14px;height:43%;border-radius:0 11px 11px 0}.landscape-frame.device-iphone-island .phone-bezel span{width:11px;height:28%}
+.landscape-frame .device-side-buttons i{left:18%;top:-5px;width:6%;height:3px}.landscape-frame .device-side-buttons i:nth-child(2){left:27%;top:-5px}.landscape-frame .device-side-buttons i:nth-child(3){left:24%;right:auto;top:auto;bottom:-5px;width:11%;height:3px}
+.phone-frame.tablet-frame.landscape-frame:not(.tv-frame){padding:12px 14px}.tablet-frame.landscape-frame:not(.device-ipad-pro):not(.tv-frame) .phone-bezel{left:2px;top:0;bottom:0;right:auto;width:10px;height:auto}.device-ipad-pro.landscape-frame .phone-bezel{top:2px;left:0;right:0;bottom:auto;width:auto;height:10px}
+.phone-frame.tv-frame{overflow:visible;border:2px solid #484d50;border-radius:3px;padding:4px 4px 12px;background:#101417;box-shadow:0 5px 10px #102e3b24}.tv-frame .phone-screen{border-radius:0}.tv-frame::after{display:none}.phone-stage:has(.tv-frame){padding-bottom:44px}
+.tv-brand{position:absolute;bottom:1px;left:0;right:0;text-align:center;font:6px/10px Arial,sans-serif;letter-spacing:1px;color:#adb1b3;pointer-events:none}
+.tv-stand{position:absolute;top:100%;left:25%;width:50%;height:26px;pointer-events:none}.tv-stand i:first-child{position:absolute;top:0;left:44%;width:12%;height:24px;background:linear-gradient(90deg,#272d30,#6d7478,#252b2e)}.tv-stand i:last-child{position:absolute;bottom:0;left:0;width:100%;height:5px;background:linear-gradient(#777f83,#23292d);border-radius:1px;box-shadow:0 3px 3px #102e3b24}
+.phone-frame.device-tv-samsung{border-color:#555b60;padding-bottom:9px}.device-tv-samsung .tv-stand{left:33%;width:34%}.device-tv-samsung .tv-stand i:last-child{height:7px;clip-path:polygon(12% 0,88% 0,100% 100%,0 100%)}
+.phone-frame.device-tv-lg{border:1px solid #74797c;padding:3px 3px 14px}.device-tv-lg .tv-stand{left:22%;width:56%}.device-tv-lg .tv-stand i:first-child{left:27%;width:46%;height:20px}.device-tv-lg .tv-stand i:last-child{height:9px;clip-path:polygon(24% 0,76% 0,100% 100%,0 100%)}
+.phone-frame.device-tv-sony{padding-bottom:10px;border-color:#333b40}.device-tv-sony .tv-brand{text-align:left;left:9px}.device-tv-sony .tv-stand{left:8%;width:84%;height:24px}.device-tv-sony .tv-stand i{top:0;bottom:auto;left:4%;width:5px;height:24px;border-radius:1px;background:#4c5358;transform:skew(-22deg);box-shadow:none}.device-tv-sony .tv-stand i:last-child{left:auto;right:4%;transform:skew(22deg)}
+
+/* Scale hardware with the short screen edge, rather than fixed cartoon-sized details. */
+.phone-frame:not(.tablet-frame):not(.tv-frame){--shell-unit:2px;border-width:calc(var(--shell-unit)*1);padding:calc(var(--shell-unit)*2);border-radius:calc(var(--shell-unit)*13);border-color:#747a7d;background:#090d10;box-shadow:0 0 0 .5px #22292d,0 3px 7px #102e3b24}
+.phone-frame:not(.tablet-frame):not(.tv-frame) .phone-screen{border-radius:calc(var(--shell-unit)*11)!important}
+.phone-frame.device-galaxy:not(.tablet-frame){border-radius:calc(var(--shell-unit)*4)}.phone-frame.device-galaxy .phone-screen{border-radius:calc(var(--shell-unit)*2.5)!important}
+.phone-frame.device-pixel:not(.tablet-frame){border-radius:calc(var(--shell-unit)*11)}.phone-frame.device-pixel .phone-screen{border-radius:calc(var(--shell-unit)*9)!important}
+.phone-frame:not(.tablet-frame):not(.tv-frame):not(.landscape-frame) .phone-bezel{top:calc(var(--shell-unit)*4);left:calc(var(--shell-unit)*2);right:calc(var(--shell-unit)*2);height:calc(var(--shell-unit)*4)}
+.phone-frame.device-iphone-island:not(.landscape-frame) .phone-bezel span{width:27%;height:calc(var(--shell-unit)*3);border-radius:calc(var(--shell-unit)*3);box-shadow:inset -2px 0 1px #16232c}
+.phone-frame.device-iphone-notch:not(.landscape-frame) .phone-bezel{top:calc(var(--shell-unit)*1.8)}.phone-frame.device-iphone-notch:not(.landscape-frame) .phone-bezel span{width:43%;height:calc(var(--shell-unit)*6);border-radius:0 0 calc(var(--shell-unit)*3) calc(var(--shell-unit)*3)}
+.phone-frame.device-pixel .phone-bezel span,.phone-frame.device-galaxy .phone-bezel span{width:calc(var(--shell-unit)*2);height:calc(var(--shell-unit)*2);box-shadow:inset 0 0 0 .5px #27323b}
+.phone-frame:not(.tablet-frame):not(.tv-frame):not(.landscape-frame) .phone-home{bottom:calc(var(--shell-unit)*4);height:calc(var(--shell-unit)*1)}.phone-frame:not(.tablet-frame):not(.tv-frame):not(.landscape-frame) .phone-home span{height:100%;width:55%;background:#899093;box-shadow:none}
+.phone-frame:not(.tablet-frame) .device-side-buttons i{width:calc(var(--shell-unit)*.7);left:calc(var(--shell-unit)*-1.6)}.phone-frame:not(.tablet-frame) .device-side-buttons i:nth-child(3){left:auto;right:calc(var(--shell-unit)*-1.6)}
+.phone-frame.landscape-frame:not(.tablet-frame):not(.tv-frame) .phone-bezel{left:calc(var(--shell-unit)*4);top:calc(var(--shell-unit)*2);bottom:calc(var(--shell-unit)*2);width:calc(var(--shell-unit)*4)}
+.phone-frame.landscape-frame.device-iphone-island .phone-bezel span{width:calc(var(--shell-unit)*3);height:27%;border-radius:calc(var(--shell-unit)*3)}.phone-frame.landscape-frame.device-iphone-notch .phone-bezel{left:calc(var(--shell-unit)*1.8)}.phone-frame.landscape-frame.device-iphone-notch .phone-bezel span{width:calc(var(--shell-unit)*6);height:43%;border-radius:0 calc(var(--shell-unit)*3) calc(var(--shell-unit)*3) 0}
+.phone-frame.landscape-frame:not(.tablet-frame):not(.tv-frame) .phone-home{right:calc(var(--shell-unit)*4);width:calc(var(--shell-unit)*1)}.phone-frame.landscape-frame .phone-home span{width:100%!important;height:55%!important}
+.phone-frame.landscape-frame:not(.tablet-frame) .device-side-buttons i{left:18%;top:calc(var(--shell-unit)*-1.6);width:6%;height:calc(var(--shell-unit)*.7)}.phone-frame.landscape-frame:not(.tablet-frame) .device-side-buttons i:nth-child(2){left:27%}.phone-frame.landscape-frame:not(.tablet-frame) .device-side-buttons i:nth-child(3){left:24%;right:auto;top:auto;bottom:calc(var(--shell-unit)*-1.6);width:11%}
+.empty-device .phone-empty{background:linear-gradient(145deg,#f5f5f2,#e7e9e7);color:#6c777e}.empty-device .phone-empty strong{display:none}.empty-device .phone-empty svg{opacity:.55}
+
+.phone-frame.device-iphone-island:not(.landscape-frame) .phone-bezel span{height:calc(var(--shell-unit)*7);border-radius:calc(var(--shell-unit)*7)}.phone-frame.landscape-frame.device-iphone-island .phone-bezel span{width:calc(var(--shell-unit)*7);border-radius:calc(var(--shell-unit)*7)}
+
+/* Local transparent PNG device artwork. CSS positions the interactive screen only. */
+.phone-stage:has(.image-device){flex-direction:column;align-items:center;gap:5px}
+.phone-frame.image-device{position:relative!important;display:block!important;aspect-ratio:var(--mockup-ratio);padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;container-type:normal}
+.phone-frame.image-device .phone-screen{position:absolute!important;left:var(--screen-left)!important;top:var(--screen-top)!important;width:var(--screen-width)!important;height:var(--screen-height)!important;aspect-ratio:auto!important;border-radius:0!important;background:var(--preview);z-index:1}
+.phone-frame.image-device>.device-mockup-image{position:absolute;inset:0;display:block;width:100%;height:100%;max-width:none;object-fit:fill;pointer-events:none;user-select:none;z-index:2;border-radius:0}
+.phone-frame.image-device .phone-empty{height:100%;min-height:100%}.mockup-caption{font-size:10px;text-align:center;color:var(--muted);line-height:1.3;max-width:100%}
+
+/* Reserve layout space for the entire stand, in previews and Results. */
+.phone-stage:has(.tv-frame){padding:12px 16px 46px;overflow:hidden}

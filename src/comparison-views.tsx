@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { Comparison } from './types';
 import { imageFrom } from './images';
 
-export function VisualModes({record,mode,align=false,phone}:{record:Comparison;mode:'overlay'|'difference';align?:boolean;phone?:{width:number;height:number;zoom:string;controller:ReturnType<typeof usePhoneScrollSync>}}) {
+export function VisualModes({record,mode,align=false,phone}:{record:Comparison;mode:'overlay'|'difference';align?:boolean;phone?:{presetId?:string;tv?:boolean;width:number;height:number;zoom:string;controller:ReturnType<typeof usePhoneScrollSync>}}) {
   const [opacity,setOpacity]=useState(50);
   const [error,setError]=useState('');
   const canvas=useRef<HTMLCanvasElement>(null);

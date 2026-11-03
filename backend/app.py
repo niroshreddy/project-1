@@ -1,4 +1,4 @@
-"""Local-only UI comparison service. No screenshots or DOM are persisted here."""
+"""Local UI comparison and knowledge service. Explicit knowledge imports persist separately; comparison captures are processed in memory."""
 import asyncio
 import base64
 import binascii
@@ -172,3 +172,6 @@ register_journey_routes(app)
 
 from backend.advisor import register_advisor
 register_advisor(app)
+
+from backend.knowledge import register_knowledge
+register_knowledge(app)

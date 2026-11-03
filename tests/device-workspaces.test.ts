@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {migrateWorkspace} from '../src/workspace-storage';
-import {mobileScope,mobileDimensions,MOBILE_PRESETS} from '../src/device-presets';
+import {mobileScope,mobileDimensions,MOBILE_PRESETS,deviceCategory} from '../src/device-presets';
 
 test('named devices with identical viewports and orientations have distinct workspace keys',()=>{
  const a={presetId:'pixel-7',orientation:'portrait' as const},b={presetId:'pixel-8',orientation:'portrait' as const};
@@ -23,4 +23,10 @@ test('workspace load rejects unknown formats instead of discarding drafts',()=>{
  assert.throws(()=>migrateWorkspace({version:9,mode:'desktop',values:{}}));
  assert.throws(()=>migrateWorkspace({version:2,mode:'mobile',mobile:{presetId:'invalid',orientation:'portrait'},values:{}}));
  assert.equal(migrateWorkspace(undefined).version,2);
+});
+
+test("TV presets use distinct saved scopes and correct viewport sizes",()=>{
+ assert.equal(deviceCategory("tv-1080p"),"tv");assert.equal(deviceCategory("ipad-mini"),"ipad");
+ assert.deepEqual(mobileDimensions({presetId:"tv-4k",orientation:"landscape"}),{width:3840,height:2160});
+ assert.notEqual(mobileScope({presetId:"tv-1080p",orientation:"landscape"}),mobileScope({presetId:"tv-4k",orientation:"landscape"}));
 });

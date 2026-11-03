@@ -5,7 +5,7 @@ function createDevicePreviewManager(api,helpers){
  const save=()=>api.storage.session.set({project1DevicePreviews:Object.fromEntries(records)});
  const serial=operation=>{const result=queue.catch(()=>{}).then(()=>ready).then(operation);queue=result.catch(()=>{});return result;};
  function spec(value){
-  if(!value||!Number.isInteger(value.width)||!Number.isInteger(value.height)||value.width<320||value.width>2560||value.height<320||value.height>2560||typeof value.presetId!=='string'||!/^[a-z0-9-]{1,80}$|^[0-9]{3,4}x[0-9]{3,4}$/.test(value.presetId)||!['portrait','landscape'].includes(value.orientation))throw Error('Invalid device preview settings.');
+  if(!value||!Number.isInteger(value.width)||!Number.isInteger(value.height)||value.width<320||value.width>4096||value.height<320||value.height>4096||typeof value.presetId!=='string'||!/^[a-z0-9-]{1,80}$|^[0-9]{3,4}x[0-9]{3,4}$/.test(value.presetId)||!['portrait','landscape'].includes(value.orientation))throw Error('Invalid device preview settings.');
   return {width:value.width,height:value.height,presetId:value.presetId,orientation:value.orientation};
  }
  const web=url=>{const parsed=new URL(url);if(!/^https?:$/.test(parsed.protocol)||parsed.username||parsed.password)throw Error('Device preview requires an HTTP/HTTPS website without URL credentials.');return parsed.href;};
@@ -23,8 +23,8 @@ function createDevicePreviewManager(api,helpers){
   const config=spec(value),state=await target(original);
   if(checkSource&&web((await api.tabs.get(original)).url||'')!==state.sourceUrl)throw Error('The original tab navigated. Click Open device preview again to load its current URL.');
   const rectangle=await bounds(state,config);await api.windows.update(state.windowId,rectangle);
-  await command(state,'Emulation.setDeviceMetricsOverride',{width:config.width,height:config.height,deviceScaleFactor:1,mobile:true,screenWidth:config.width,screenHeight:config.height,scale:Math.max(.1,Math.min(1,(rectangle.width-40)/config.width,(rectangle.height-110)/config.height)),screenOrientation:{type:config.orientation==='landscape'?'landscapePrimary':'portraitPrimary',angle:config.orientation==='landscape'?90:0}});
-  await command(state,'Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:5});state.settings=config;await save();return state;
+  await command(state,'Emulation.setDeviceMetricsOverride',{width:config.width,height:config.height,deviceScaleFactor:1,mobile:!String(config.presetId).includes("tv"),screenWidth:config.width,screenHeight:config.height,scale:Math.max(.1,Math.min(1,(rectangle.width-40)/config.width,(rectangle.height-110)/config.height)),screenOrientation:{type:config.orientation==='landscape'?'landscapePrimary':'portraitPrimary',angle:config.orientation==='landscape'?90:0}});
+  await command(state,'Emulation.setTouchEmulationEnabled',{enabled:!String(value.presetId).includes("tv"),maxTouchPoints:5});state.settings=config;await save();return state;
  }
  async function info(original){
   const state=records.get(original);if(!state)return {active:false};
@@ -40,7 +40,7 @@ function createDevicePreviewManager(api,helpers){
    if(!state.sessionId)state.sessionId=crypto.randomUUID();listen();if(!state.attached){await api.debugger.attach({tabId:state.tabId},'1.3');state.attached=true;state.error=undefined;}
    const previousUrl=state.sourceUrl;state.sourceUrl=url;
    // Apply metrics before navigating a newly created window; about:blank is owned by this manager.
-   if(created){await command(state,'Emulation.setDeviceMetricsOverride',{width:value.width,height:value.height,deviceScaleFactor:1,mobile:true,screenWidth:value.width,screenHeight:value.height,screenOrientation:{type:value.orientation==='landscape'?'landscapePrimary':'portraitPrimary',angle:value.orientation==='landscape'?90:0}});await command(state,'Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:5});}
+   if(created){await command(state,'Emulation.setDeviceMetricsOverride',{width:value.width,height:value.height,deviceScaleFactor:1,mobile:!String(value.presetId).includes("tv"),screenWidth:value.width,screenHeight:value.height,screenOrientation:{type:value.orientation==='landscape'?'landscapePrimary':'portraitPrimary',angle:value.orientation==='landscape'?90:0}});await command(state,'Emulation.setTouchEmulationEnabled',{enabled:!String(value.presetId).includes("tv"),maxTouchPoints:5});}
    const current=await api.tabs.get(state.tabId);
    if(created||previousUrl!==url||!/^https?:/.test(current.url||''))await api.tabs.update(state.tabId,{url});
    state.settings=spec(value);await save();await apply(original,value,false);return {active:true,tabId:state.tabId,windowId:state.windowId,url,settings:state.settings};

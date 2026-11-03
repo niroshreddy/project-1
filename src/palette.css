@@ -10,16 +10,34 @@ a{color:var(--accent)}a:hover{text-decoration:underline}input[type=checkbox],inp
 .notice:not(.error){background:var(--preview);border-color:var(--border);color:var(--text)}
 button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
 
-/* Reference palette: navy header, muted teal actions, warm ivory surfaces. Colors only. */
-.workspace-header,.workspace-header header{background:var(--header);color:#f6f2e8;border-color:#365564}
-.tool-name .ui-icon{color:#b5d9d9}
-.workspace-header nav button{color:#f1eee4}
-.workspace-header nav button.active{background:var(--active);color:#fff;border-color:#b6d0ce}
-.workspace-header nav button:hover{background:#426c7a}
-.workspace-header .settings-button,.workspace-header .settings-button.active{color:#f5f0e4}
-.workspace-header .settings-button:hover{background:#426c7a}
-.trust-menu>summary,.trust-menu>summary.ready,:root[data-theme='dark'] .trust-menu>summary.ready{background:#426f7d;color:#fff}
-.trust-menu>summary.offline,.trust-menu>summary.setup{background:#4c5250;color:#ffe1ac}
-.workflow-steps .current .workflow-number{background:var(--navy);color:#fff}
-.workflow-steps li:not(:last-child)::after{background:#426478}
-.device-mode button[aria-pressed='true']{background:var(--navy);border-color:var(--navy);color:#fff}
+/* Chrome DevTools Application-style palette (shared DevTools system colors). Colors only; layout and behavior unchanged. */
+.workspace-header,.workspace-header header{background:var(--header);color:var(--text);border-color:var(--border)}
+.tool-name .ui-icon{color:var(--accent)}
+.workspace-header nav button{color:var(--muted)}
+.workspace-header nav button.active{background:transparent;color:var(--accent);border-color:transparent;border-bottom-color:var(--accent);border-radius:0}
+.workspace-header nav button:hover,.workspace-header .settings-button:hover{background:var(--hover)}
+.workspace-header .settings-button,.workspace-header .settings-button.active{color:var(--muted)}
+.trust-menu>summary,.trust-menu>summary.ready,:root[data-theme='dark'] .trust-menu>summary.ready{background:var(--status-bg);color:var(--status-text)}
+.workflow-steps .current .workflow-number{background:var(--primary);color:var(--on-primary)}
+.workflow-steps li:not(:last-child)::after{background:var(--control-border)}
+.device-mode button[aria-pressed='true'],.orientation-toggle button[aria-pressed='true']{background:var(--active);border-color:var(--control-border);color:var(--on-active)}
+.card,.comparison-parameters{background:var(--surface)}
+.device-controls,.device-preview-controls,.preview-controls{background:var(--preview)}
+.workspace-sidebar{background:var(--sidebar);color:var(--text);border-color:var(--border)}
+.workspace-sidebar .sidebar-brand{border-color:var(--border)}
+.workspace-sidebar nav button,.workspace-sidebar nav button small,.workspace-sidebar .sidebar-brand small,.workspace-sidebar>small{color:var(--muted)}
+.workspace-sidebar nav button.active{background:transparent;color:var(--accent);border-color:transparent;border-bottom-color:var(--accent);border-radius:0}
+.workspace-sidebar nav button:hover{background:var(--hover)}
+.workspace-sidebar button:focus-visible{outline-color:var(--focus)!important}
+
+/* Contrast-aware control edges and keyboard focus in both DevTools themes. */
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),select,textarea{border-color:var(--control-border)}
+:root :is(button,input,textarea,select,summary,a,[tabindex]):focus-visible{outline:3px solid var(--focus);outline-offset:2px;box-shadow:0 0 0 2px var(--surface)}
+:root .workspace-header :is(button,summary,a):focus-visible{outline:3px solid var(--focus);outline-offset:-4px;box-shadow:none}
+:root .parameters-heading:focus-visible{outline-offset:-4px;box-shadow:none}
+:root .phone-screen:focus-visible{outline-offset:-3px;box-shadow:none}
+.service.ready .service-dot{color:var(--status-text)}.trust-menu>summary.offline,.trust-menu>summary.setup{background:#fff3db;color:#7a4a00}.service.offline .service-dot,.service.setup .service-dot{color:#995c00}
+:root[data-theme='dark'] .trust-menu>summary.offline,:root[data-theme='dark'] .trust-menu>summary.setup{background:#4b361d;color:#ffdaa0}
+:root[data-theme='dark'] .service.offline .service-dot,:root[data-theme='dark'] .service.setup .service-dot{color:#ffc566}
+:root[data-theme='dark'] :is(.capture-action,.upload-action .source-action,.device-mode button[aria-pressed='true'],.orientation-toggle button[aria-pressed='true']){border-color:var(--control-border)}
+.empty-device .phone-empty{background:var(--preview);color:var(--muted)}

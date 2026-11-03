@@ -16,7 +16,7 @@ export async function capturePage(mode:'full-page'|'viewport'='full-page', targe
   const granted = await chrome.permissions.request({ origins: ['<all_urls>'] });
   if (!granted) throw new Error('Website access is needed for viewport capture. Click Capture again to grant access.');
   if(target){
-    if(!Number.isInteger(target.width)||!Number.isInteger(target.height)||target.width<320||target.width>2560||target.height<320||target.height>2560)throw new Error('Choose viewport dimensions between 320 and 2560 CSS px.');
+    if(!Number.isInteger(target.width)||!Number.isInteger(target.height)||target.width<320||target.width>4096||target.height<320||target.height>4096)throw new Error('Choose viewport dimensions between 320 and 4096 CSS px.');
     await message({type:'validateViewport',...target});
   }
   const quality=await message<Capture['snapshot']['quality']>({type:'captureQuality'});

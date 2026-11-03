@@ -1,19 +1,22 @@
-/* Shared app palette. Dark surfaces adapt to the selected DevTools theme. */
+/* Application-style palette based on Chrome DevTools shared system/reference tokens.
+ * Source: https://github.com/ChromeDevTools/devtools-frontend/blob/main/front_end/design_system_tokens.css
+ * Default light/dark fallbacks; Chrome custom accent themes can differ.
+ * White content, neutral95 previews, neutral80 dividers, primary40 actions. */
 :root,:root[data-theme='light']{
  color-scheme:light;
- --bg:#f5f3ed;--surface:#fffefa;--preview:#eeede7;
- --text:#12384b;--muted:#536574;--border:#d8dcd7;--hover:#e6eeeb;
- --header:#173c4e;--primary:#173c4e;--primary-hover:#245268;--on-primary:#ffffff;--active:#548593;
- --navy:#173c4e;--teal:#548593;--teal-hover:#426e7b;--accent:#507f8c;
+ --bg:#ffffff;--surface:#ffffff;--preview:#f2f2f2;
+ --text:#1f1f1f;--muted:#474747;--border:#c7c7c7;--hover:#f2f2f2;--focus:#0b57d0;--control-border:#747775;
+ --header:#edf2fa;--primary:#0b57d0;--primary-hover:#0842a0;--on-primary:#ffffff;--active:#d3e3fd;--on-active:#041e49;--sidebar:#f2f2f2;
+ --navy:#0b57d0;--teal:#0b57d0;--teal-hover:#0842a0;--accent:#0b57d0;
  --status-bg:#e6f4ea;--status-text:#137333;
  --highlight:#fff2e3;--highlight-strong:#fed7aa;--highlight-border:#b45309;--highlight-text:#9a3412;
 }
 :root[data-theme='dark']{
  color-scheme:dark;
- --bg:#162b32;--surface:#203b43;--preview:#1b333b;
- --text:#f1ecdf;--muted:#bbc9c8;--border:#486069;--hover:#304e56;
- --header:#102e3b;--primary:#83b5bd;--primary-hover:#9dc8ce;--on-primary:#102e3b;--active:#548593;
- --navy:#102e3b;--teal:#548593;--teal-hover:#426e7b;--accent:#83b5bd;
+ --bg:#1f1f1f;--surface:#282828;--preview:#303030;
+ --text:#e3e3e3;--muted:#c7c7c7;--border:#757575;--hover:#3c3c3c;--focus:#a8c7fa;--control-border:#9aa0a6;
+ --header:#292a2d;--primary:#a8c7fa;--primary-hover:#c2d7fb;--on-primary:#062e6f;--active:#004a77;--on-active:#dff3ff;--sidebar:#303030;
+ --navy:#0b57d0;--teal:#0b57d0;--teal-hover:#0842a0;--accent:#a8c7fa;
  --status-bg:#183d2a;--status-text:#81c995;
  --highlight:#473424;--highlight-strong:#67472e;--highlight-border:#f2b36d;--highlight-text:#fed7aa;
 }
